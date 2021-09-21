@@ -12,7 +12,7 @@ Engine_Fm1 : CroneEngine {
 		// <Fm1>
 		// initialize synth defs
 		SynthDef("Fm1",{
-            arg hz=880,attack=2,decay=1,amp=0.5;
+            arg hz=880,attack=0.01,decay=2,amp=0.5;
             var snd;
             snd=SinOsc.ar(hz,SinOsc.ar([135,138]/220*hz)*0.35);
             snd=snd*EnvGen.ar(Env.perc(attack,decay,1.0,Select.kr(attack<decay,[[4,4.neg],4.neg])),doneAction:2);
