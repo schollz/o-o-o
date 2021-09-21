@@ -63,6 +63,24 @@ function er.print(r)
    end
 end
 
+function er.random(n)
+    local k=math.random(1,n)
+    local w=math.random(0,n-1)
+    return er.gen(n,k,w)
+end
+
+function er.random2(n)
+    local r=er.random(n)
+    local n2=er.num_empty(r)
+    if n2 > 0 then
+        local k2=math.random(0,n2-1)
+        local w2=math.random(0,n2-1)
+        local r2=er.gen(n2,k2,w2)
+        r=er.fill_empty(r,r2)
+    end
+    return r
+end
+
 -- local r=er.gen(16,4,1)
 -- er.print(r)
 -- print(er.num_empty(r))
