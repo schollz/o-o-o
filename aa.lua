@@ -21,6 +21,7 @@ function init()
   local divisions={1/32,1/16,1/8,1/4,1/2,1}
   note_root=60
   playing=false
+  notework_pos=1
   notework_initialize(42)
 
   local lattice=Lattice:new{
@@ -151,8 +152,18 @@ function enc(k,d)
   else
     if k==1 then
     elseif k==2 then
-    else
+      notework_pos_change(d*8)
+    elseif k==3 then
+      notework_pos_change(d)
     end
+  end
+end
+
+function notework_pos_change(d)
+  local pos=notework_pos
+  pos=pos+d
+  if pos >= 1 and pos <= 64 then 
+    notework_pos=pos 
   end
 end
 
@@ -170,6 +181,11 @@ function redraw()
     screen.level(nw.iterated and 15 or 2)
     screen.circle(x,y,nw.emitted and 3 or 2)
     screen.fill()
+    if notework_pos==i then 
+      screen.level(15)
+      screen.circle(x,y,5)
+      screen.stroke()      
+    end
   end
 
   -- show the network topology
