@@ -109,6 +109,9 @@ function Ternary:draw()
   screen.text("e3 change type")
 
   -- TODO: show if playing
+  screen.level(15)
+  screen.move(120,5)
+  screen.text(self.playing and ">" or "||")
 end
 
 return Ternary

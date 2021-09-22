@@ -7,7 +7,7 @@
 --
 --    ▼ instructions below ▼
 --
--- ?
+-- E1 changes page
 
 -- keep track of which keys are down
 local keydown={}
@@ -57,8 +57,6 @@ function init()
   -- nw_melody:connect(33,48)
   -- nw_melody:connect(48,64)
   tab.print(nw_melody:networked(1))
-
-  nw_melody.playing=true
 
   local lattice=Lattice:new{
     ppqn=96
@@ -228,6 +226,7 @@ end
 function redraw()
   screen.clear()
 
+  if global_page==1 then nw_chords:draw() end
   if global_page==2 then nw_melody:draw() end
 
   screen.update()
