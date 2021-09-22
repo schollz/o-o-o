@@ -12,18 +12,18 @@ end
 function Network:init()
   math.randomseed(self.seed)
   self.playing=false
+  self.emitted=false
   self.pos=1
   self.pos_hold=nil
   self.nw={}
   self.conn={}
-  self.playing=false
-  self.emitted=false
   for i=1,64 do
     -- generate random notework lattice
     self.nw[i]={
       armed=false,
       er=er.random(math.random(8,32)),
       pos=0,
+      pan=math.random(-100,100)/200
       div=global_divisions[math.random(#global_divisions)],
       emitted=false,
       iterated=false,
