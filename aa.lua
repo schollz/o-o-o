@@ -41,13 +41,14 @@ function init()
               -- ...it is armed
               if nw.er[notework[j].pos] then
                 notework[j].iterated=true
-                if (#nw.to>0 or nw.armed) then 
+                local to=notework_to(j)
+                if (#to>0 or nw.armed) then 
                   notework[j].emitted=true
                   -- emit note 
                   engine.hz(MusicUtil.note_num_to_freq(note_root+nw.note))            
 
                   -- arm connected
-                  for _,j2 in ipairs(nw.to) do 
+                  for _,j2 in ipairs(to) do 
                     notework[j2].armed=true
                   end
 
@@ -92,26 +93,28 @@ function init()
   timer:start()
 end
 
+function notework_to(i)
+  local to={}
+  for i,v in ipairs(notework_connections) do
+    if v[1]==i then 
+      table.insert(to,v[2])
+    end
+  end
+  return to
+end
 
 function notework_initialize(seed,preserve_connections)
   math.randomseed(seed)
   if notework==nil then
     notework={}
   end
-  if preserve_connections==nil then 
-    preserve_connections=false 
+  if not preserve_connections then 
+    notework_connections={}
   end
   for i=1,64 do
     -- generate random notework lattice
-    local to={}
-    if preserve_connections and notework[i]~= nil then
-      for _,v in ipairs(notework) do 
-        table.insert(to,v)
-      end
-    end
     notework[i]={
       armed=false,
-      to=to,
       er=er.random2(math.random(4,16)),
       pos=0,
       div=divisions[math.random(#divisions)],
@@ -128,7 +131,7 @@ function notework_connect()
     do return end 
   end 
   -- connect the first key to the second key
-  table.insert(notework_connect[keydown[k]].to,notework_pos)
+  table.insert(notework_connections,{keydown[k],notework_pos})
 end
 
 function update_screen()
