@@ -18,12 +18,14 @@ local er=include("aa/lib/er")
 local Lattice=require("lattice")
 local MusicUtil=require("musicutil")
 local Network=include("aa/lib/network")
+local Ternary=include("aa/lib/ternary")
 
 engine.name="Fm1"
 
 function init()
   -- available divisions
   global_divisions={1/16,1/8}
+  global_page=1
 
   notework_pos=1
   local scale_melody_transpose=0
@@ -37,6 +39,13 @@ function init()
     -- if MusicUtil.note_num_to_name(scale_melody[j])~="B" then
     --   engine.hz(MusicUtil.note_num_to_freq(scale_melody[j]+24))
     -- end
+  end)
+
+  nw_chords=Ternary:new()
+  nw_chords:set_action(function(notes)
+    for _, note in ipairs(notes) do
+      print("Ternary note: "..scale_melody[note+24])
+    end
   end)
 
   -- generate some test connections
@@ -146,23 +155,30 @@ function update_screen()
 end
 
 function key(k,z)
-  if z==1 then
-    nw_melody:connect_first()
-  else
-    if z==0 and k==3 then
-      nw_melody:connect()
+  if global_page==2 and (not keydown[1]) then
+    if z==1 then
+        nw_melody:connect_first()
+    else
+      if z==0 and k==3 then
+          nw_melody:connect()
+      end
+      keydown[k]=nil
     end
-    keydown[k]=nil
   end
   if keydown[1] then
     if k==1 then
     elseif k==2 then
     elseif k==3 then
+      -- toggle playing
+      if global_page==1 then nw_chords:toggle_play() end
+      if global_page==2 then nw_melody:toggle_play() end
     end
   else
     if k==1 then
     elseif k==2 then
+      if global_page==1 then nw_chords:remove_chord() end
     elseif k==3 then
+      if global_page==1 then nw_chords:add_chord() end
     end
   end
 end
@@ -175,10 +191,13 @@ function enc(k,d)
     end
   else
     if k==1 then
+      global_page=util.clamp(global_page+d,1,2)
     elseif k==2 then
-      nw_melody:change_pos(d*8)
+      if global_page==1 then nw_chords:change_pos(d) end
+      if global_page==2 then nw_melody:change_pos(d*8) end
     elseif k==3 then
-      nw_melody:change_pos(d)
+      if global_page==1 then nw_chords:change_chord(d) end
+      if global_page==2 then nw_melody:change_pos(d) end
     end
   end
 end
@@ -186,7 +205,7 @@ end
 function redraw()
   screen.clear()
 
-  nw_melody:draw()
+  if global_page==2 then nw_melody:draw() end
 
   screen.update()
 end

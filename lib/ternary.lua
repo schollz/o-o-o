@@ -101,6 +101,14 @@ function Ternary:draw()
     table.insert(ps,{tr[1]+(i-1)*spacing,tr[2]+ops[3]+10})
   end
   self:plot_points(ps)
+
+  screen.level(15)
+  screen.move(1,5)
+  screen.text("e2 select chord")
+  screen.move(1,12)
+  screen.text("e3 change type")
+
+  -- TODO: show if playing
 end
 
 return Ternary

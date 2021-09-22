@@ -256,6 +256,14 @@ function Network:draw()
       screen.stroke()
     end
   end
+
+  screen.level(15)
+  screen.move(1,5)
+  screen.text("e2/e3 move")
+  screen.move(1,12)
+  screen.text("hold k3 to connect")
+
+  -- TODO: show if playing
 end
 
 return Network
