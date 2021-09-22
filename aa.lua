@@ -9,7 +9,7 @@
 --
 -- ?
 
-local shift=false
+local keydown={}
 local er=include("aa/lib/er")
 local Lattice=require("lattice")
 local MusicUtil=require("musicutil")
@@ -122,29 +122,43 @@ function notework_initialize(seed,preserve_connections)
   end
 end
 
+function notework_connect()
+  if keydown[k]==notework_pos or 
+    math.floor(keydown[k])==math.floor(notework_pos) then 
+    do return end 
+  end 
+  -- connect the first key to the second key
+  table.insert(notework_connect[keydown[k]].to,notework_pos)
+end
+
 function update_screen()
   redraw()
 end
 
 function key(k,z)
-  if k==1 then
-    shift=z==1
+  if z==1 then 
+    keydown[k]=notework_pos
+  else
+    if z==0 and k==3 then
+      notework_connect()
+    end
+    keydown[k]=nil
   end
-  if shift then
+  if keydown[1] then
     if k==1 then
     elseif k==2 then
-    else
+    elseif k==3 then
     end
   else
     if k==1 then
     elseif k==2 then
-    else
+    elseif k==3 then
     end
   end
 end
 
 function enc(k,d)
-  if shift then
+  if keydown[1] then
     if k==1 then
     elseif k==2 then
     else
