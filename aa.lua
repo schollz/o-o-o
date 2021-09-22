@@ -17,36 +17,45 @@ include("aa/lib/utils")
 local er=include("aa/lib/er")
 local Lattice=require("lattice")
 local MusicUtil=require("musicutil")
-local Network=require("aa/lib/network")
+local Network=include("aa/lib/network")
 
 engine.name="Fm1"
 
 function init()
   -- available divisions
-  global_divisions={1/16,1/8,1/4,1/2,1}
+  global_divisions={1/16,1/8}
 
   notework_pos=1
+  local scale_melody_transpose=0
   local scale_melody=generate_scale(24) -- generate scale starting with C
   nw_melody=Network:new()
   nw_melody:set_action(function(j)
     engine.attack(0.01)
     engine.decay(1)
-    if MusicUtil.note_num_to_name(scale_melody[j])~="B" then
-      engine.hz(MusicUtil.note_num_to_freq(scale_melody[j]+24))
-    end
+    scale_melody_transpose=0
+    engine.hz(MusicUtil.note_num_to_freq(scale_melody[j+scale_melody_transpose]+24))
+    -- if MusicUtil.note_num_to_name(scale_melody[j])~="B" then
+    --   engine.hz(MusicUtil.note_num_to_freq(scale_melody[j]+24))
+    -- end
   end)
 
   -- generate some test connections
+  nw_melody:connect(1,8)
   nw_melody:connect(1,17)
-  nw_melody:connect(9,10)
-  nw_melody:connect(9,32)
-  nw_melody:connect(1,24)
-  nw_melody:connect(58,24)
+  nw_melody:connect(1,27)
+  nw_melody:connect(1,47)
+
+  -- nw_melody:connect(8,33)
+  -- nw_melody:connect(33,48)
+  -- nw_melody:connect(48,64)
+  tab.print(nw_melody:networked(1))
+
+  nw_melody.playing=true
 
   local lattice=Lattice:new{
     ppqn=96
   }
-  for i,div in ipairs(divisions) do
+  for i,div in ipairs({1/16,1/8,1/4,1/2,1}) do
     local step=-1
     lattice:new_pattern{
       action=function(t)
@@ -55,27 +64,31 @@ function init()
           if step%4==0 then
             engine.attack(4)
             engine.decay(0.1)
-            engine.hz(MusicUtil.note_num_to_freq(60+12))
-            engine.hz(MusicUtil.note_num_to_freq(64+12))
-            engine.hz(MusicUtil.note_num_to_freq(69+12))
+            -- engine.hz(MusicUtil.note_num_to_freq(60+12))
+            -- engine.hz(MusicUtil.note_num_to_freq(64+12))
+            -- engine.hz(MusicUtil.note_num_to_freq(69+12))
+            scale_melody_transpose=5
           elseif step%4==1 then
             engine.attack(4)
             engine.decay(0.1)
-            engine.hz(MusicUtil.note_num_to_freq(60+12))
-            engine.hz(MusicUtil.note_num_to_freq(65+12))
-            engine.hz(MusicUtil.note_num_to_freq(69+12))
+            -- engine.hz(MusicUtil.note_num_to_freq(60+12))
+            -- engine.hz(MusicUtil.note_num_to_freq(65+12))
+            -- engine.hz(MusicUtil.note_num_to_freq(69+12))
+            scale_melody_transpose=3
           elseif step%4==2 then
             engine.attack(4)
             engine.decay(0.5)
-            engine.hz(MusicUtil.note_num_to_freq(60+12))
-            engine.hz(MusicUtil.note_num_to_freq(64+12))
-            engine.hz(MusicUtil.note_num_to_freq(67+12))
+            -- engine.hz(MusicUtil.note_num_to_freq(60+12))
+            -- engine.hz(MusicUtil.note_num_to_freq(64+12))
+            -- engine.hz(MusicUtil.note_num_to_freq(67+12))
+            scale_melody_transpose=0
           elseif step%4==3 then
             engine.attack(4)
             engine.decay(0.5)
-            engine.hz(MusicUtil.note_num_to_freq(59+12))
-            engine.hz(MusicUtil.note_num_to_freq(62+12))
-            engine.hz(MusicUtil.note_num_to_freq(67+12))
+            -- engine.hz(MusicUtil.note_num_to_freq(59+12))
+            -- engine.hz(MusicUtil.note_num_to_freq(62+12))
+            -- engine.hz(MusicUtil.note_num_to_freq(67+12))
+            scale_melody_transpose=4
           end
         end
         nw_melody:emit(step,div)
@@ -110,12 +123,20 @@ end
 
 function generate_scale(root)
   local note_list={}
-  for i=1,8 do
+  for i=1,4 do
     for _,note in ipairs(MusicUtil.generate_scale_of_length(root,1,8)) do
       table.insert(note_list,note)
     end
-    root=note_list[#note_list-3] -- plonky type keyboard
-    -- root=root+12
+    -- root=note_list[#note_list-3] -- plonky type keyboard
+    root=root+12
+  end
+  root=root-48
+  for i=1,4 do
+    for _,note in ipairs(MusicUtil.generate_scale_of_length(root,1,8)) do
+      table.insert(note_list,note)
+    end
+    -- root=note_list[#note_list-3] -- plonky type keyboard
+    root=root+12
   end
   return note_list
 end

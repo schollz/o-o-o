@@ -11,6 +11,7 @@ end
 
 function Network:init()
   math.randomseed(self.seed)
+  self.playing=false
   self.pos=1
   self.pos_hold=nil
   self.nw={}
@@ -46,14 +47,16 @@ function Network:emit(step,div)
       if nw.er[self.nw[j].pos] then
         self.nw[j].iterated=true
         local to=self:to(j)
-        -- only play if nothing is armed
+        local into=self:into(j)
+        -- only play if nothing connnected is armed
+        local web=self:networked(j)
         local none_armed=true
-        for _,k in ipairs(to) do
+        for _,k in ipairs(web) do
           if self.nw[k].armed then
             none_armed=false
           end
         end
-        if ((none_armed and #to>0) or nw.armed) then
+        if ((none_armed and #into==0 and #to>0) or nw.armed) then
           self.nw[j].emitted=true
           -- emit note
           if self.fn~=nil then
@@ -80,8 +83,39 @@ function Network:emit(step,div)
   end
 end
 
-function Network:toggle_playing()
-  self.playing=not self.playing
+function Network:toggle_play()
+  self.playing=(not self.playing)
+end
+
+-- web generates the list of all connected nodes
+function Network:networked(i)
+  local r={}
+  local rhave={}
+  for _,v in ipairs(self.conn) do
+    if (v[1]==i or v[2]==i) then
+      for j=1,2 do
+        if rhave[v[j]]==nil then
+          table.insert(r,v[j])
+          rhave[v[j]]=true
+        end
+      end
+    end
+  end
+  for ii=1,7 do
+    for _,k in ipairs(r) do
+      for _,v in ipairs(self.conn) do
+        if (v[1]==k or v[2]==k) then
+          for j=1,2 do
+            if rhave[v[j]]==nil then
+              table.insert(r,v[j])
+              rhave[v[j]]=true
+            end
+          end
+        end
+      end
+    end
+  end
+  return r
 end
 
 function Network:connect(i,j)
@@ -125,6 +159,16 @@ function Network:to(i)
   return to
 end
 
+function Network:into(i)
+  local into={}
+  for _,v in ipairs(self.conn) do
+    if v[2]==i then
+      table.insert(into,v[1])
+    end
+  end
+  return into
+end
+
 function Network:change_pos(d)
   local pos=self.pos
   pos=pos+d
@@ -152,11 +196,14 @@ function Network:draw_connection(i,j,lw)
   local x2,y2=self:coord(j)
   local d=distance_points(x1,y1,x2,y2)
   -- TODO: add a little lfo to the the point so they sway
-  local p=perpendicular_points({x1,y1},{x2,y2},math.sqrt(d)*4)
-  screen.line_width(lw or 1)
-  screen.level(15)
+  local p=perpendicular_points({x1,y1},{x2,y2},math.sqrt(d)*8)
+  if lw==nil then
+    lw=self.nw[j].armed and 2 or 1
+  end
+  screen.line_width(lw)
+  screen.level(self.nw[j].armed and 15 or 7)
   screen.move(x1,y1)
-  screen.curve(p[1],p[2],p[1],p[2],x2,y2)
+  screen.curve((p[1]+x1)/2,(p[2]+y1)/2,(p[1]+x2)/2,(p[2]+y2)/2,x2,y2)
   screen.stroke()
 end
 
@@ -188,20 +235,22 @@ function Network:draw()
     screen.fill()
 
     -- draw a different sized dot
-    screen.level(nw.iterated and 4 or 2)
+    screen.level(nw.iterated and 3 or 1)
     screen.circle(x,y,2)
     screen.fill()
+    screen.line_width(1)
     if nw.emitted then
       screen.level(4)
-      screen.circle(x,y,3)
+      screen.circle(x,y,2)
       screen.stroke()
     end
     if self.pos==i then
       screen.level(15)
-      screen.circle(x,y,5)
+      screen.circle(x,y,4)
       screen.stroke()
     end
   end
 end
 
 return Network
+
