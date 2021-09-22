@@ -11,6 +11,13 @@ end
 
 function Ternary:init()
   math.randomseed(self.seed)
+  self.chord_options={}
+  for i=-3,3 do 
+    for _,v in ipairs({{2,2},{2,3},{3,2}}) do
+        table.insert(self.chord_options,{i,v[1],v[2]})
+    end
+  end
+  self.chord_option_current=10
   self.playing=false
   self.pos=1
   self.div=1
