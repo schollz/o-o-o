@@ -17,6 +17,7 @@ function Network:init()
   self.nw={}
   self.conn={}
   self.playing=false
+  self.emitted=false
   for i=1,64 do
     -- generate random notework lattice
     self.nw[i]={
@@ -56,8 +57,13 @@ function Network:emit(step,div)
             none_armed=false
           end
         end
-        if ((none_armed and #into==0 and #to>0) or nw.armed) then
+        if ((none_armed and #into==0 and #to>0) or nw.armed) and (not self.emitted) then
           self.nw[j].emitted=true
+          self.emitted=true
+          clock.run(function()
+            clock.sleep(clock.get_beat_sec()/16)
+            self.emitted=false
+          end)
           -- emit note
           if self.fn~=nil then
             self.fn(j)
@@ -253,4 +259,3 @@ function Network:draw()
 end
 
 return Network
-
