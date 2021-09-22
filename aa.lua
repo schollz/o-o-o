@@ -184,14 +184,33 @@ end
 function redraw()
   screen.clear()
 
+  -- show the network topology
+  -- TODO: using bezier curves
+  -- where curving UP connects left to right
+  -- and curving DOWN connects right to left
+  for i,nw in ipairs(notework) do 
+    local x1,y1=notework_coord(i)
+    for _, j in ipairs(to) do
+      local x2,y2=notework_coord(j)
+      local d=distance_points(x1,y1,x2,y2)
+      local p=perpendicular_points({x1,y1},{x2,y2},d/4)
+      screen.level(15)
+      screen.move(x1,y1)
+      screen.curve(p[1],p[2],p[1],p[2],x2,y2)
+      screen.stroke()
+    end
+  end
+
+
   -- show the notework dots
-  local tr={32,10}
-  local spacing=8
   for i,nw in ipairs(notework) do
-    local row=8-(i%8-1)
-    local col=1+math.floor(i/8)
-    local x=col*spacing+tr[1]
-    local y=row*spacing+tr[2]
+    local x,y=notework_coord(i)
+    -- erase the network topology directly around
+    screen.level(0)
+    screen.circle(x,y,notework_pos==i and 5 or 3)
+    screen.fill()
+
+    -- draw a different sized dot
     screen.level(nw.iterated and 15 or 2)
     screen.circle(x,y,nw.emitted and 3 or 2)
     screen.fill()
@@ -202,12 +221,18 @@ function redraw()
     end
   end
 
-  -- show the network topology
-  -- TODO: using bezier curves
-  -- where curving UP connects left to right
-  -- and curving DOWN connects right to left
-  
+
   screen.update()
+end
+
+function notework_coord(i) 
+  local tr={32,10}
+  local spacing=8
+  local row=8-(i%8-1)
+  local col=1+math.floor(i/8)
+  local x=col*spacing+tr[1]
+  local y=row*spacing+tr[2]
+  return x,y
 end
 
 function rerun()
@@ -215,9 +240,26 @@ function rerun()
 end
 
 
+function distance_points( x1, y1, x2, y2 )
+  local dx = x1 - x2
+  local dy = y1 - y2
+  return math.sqrt ( dx * dx + dy * dy )
+end
+
+-- https://math.stackexchange.com/a/995675
 function perpendicular_points(p1,p2,d)
-  local p3={0,0}
+  local p3={{0,0},{0,0}}
   for i=1,2 do 
-    p3[i]=(p1[i]+p2[i])/2
+    p3[1][i]=(p1[i]+p2[i])/2
+    p3[2][i]=(p1[i]+p2[i])/2
   end
+  local factor=d/math.sqrt((p2[2]-p1[2])^2+(p2[1]-p1[1])^2)
+  local i=1
+  p3[i][1]=p3[i][1]+factor*(p1[2]-p2[2])
+  p3[i][2]=p3[i][2]+factor*(p2[1]-p1[1])
+  i=2
+  factor=factor*-1
+  p3[i][1]=p3[i][1]+factor*(p1[2]-p2[2])
+  p3[i][2]=p3[i][2]+factor*(p2[1]-p1[1])
+  return p3[1],p3[2]
 end
