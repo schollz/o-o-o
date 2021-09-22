@@ -21,24 +21,54 @@ engine.name="Fm1"
 
 function init()
   -- available divisions
-  local divisions={1/32,1/16,1/8,1/4,1/2,1}
+  divisions={1/16,1/8,1/4,1/2,1}
 
   playing=false
   notework_pos=1
   generate_scale(24) -- generate scale starting with C
-  notework_initialize(42)
+  notework_initialize(41)
   -- generate some test connections
-  notework_connect(1,9)
+  notework_connect(1,17)
   notework_connect(9,10)
+  notework_connect(9,32)
+  notework_connect(1,24)
+  notework_connect(58,24)
 
   local lattice=Lattice:new{
     ppqn=96
   }
-  for i,div in ipairs(divs) do
-    local step=0
+  for i,div in ipairs(divisions) do
+    local step=-1
     lattice:new_pattern{
       action=function(t)
         step=step+1
+        if div==1 then 
+          if step%4==0 then 
+              engine.attack(4)
+              engine.decay(0.1)
+              engine.hz(MusicUtil.note_num_to_freq(60+12))
+              engine.hz(MusicUtil.note_num_to_freq(64+12))
+              engine.hz(MusicUtil.note_num_to_freq(69+12))
+          elseif step%4==1 then 
+              engine.attack(4)
+              engine.decay(0.1)
+              engine.hz(MusicUtil.note_num_to_freq(60+12))
+              engine.hz(MusicUtil.note_num_to_freq(65+12))
+              engine.hz(MusicUtil.note_num_to_freq(69+12))
+          elseif step%4==2 then 
+              engine.attack(4)
+              engine.decay(0.5)
+              engine.hz(MusicUtil.note_num_to_freq(60+12))
+              engine.hz(MusicUtil.note_num_to_freq(64+12))
+              engine.hz(MusicUtil.note_num_to_freq(67+12))
+          elseif step%4==3 then 
+              engine.attack(4)
+              engine.decay(0.5)
+              engine.hz(MusicUtil.note_num_to_freq(59+12))
+              engine.hz(MusicUtil.note_num_to_freq(62+12))
+              engine.hz(MusicUtil.note_num_to_freq(67+12))
+          end
+        end
         if playing then 
           for j,nw in ipairs(notework) do 
             if nw.div==div then 
@@ -49,16 +79,28 @@ function init()
               if nw.er[notework[j].pos] then
                 notework[j].iterated=true
                 local to=notework_to(j)
-                if (#to>0 or nw.armed) then 
+                -- only play if nothing is armed
+                local none_armed=true
+                for _, k in ipairs(to) do
+                  if notework[k].armed then 
+                    none_armed=false
+                  end
+                end
+                if ((none_armed and #to>0) or nw.armed) then 
                   notework[j].emitted=true
                   -- emit note 
                   engine.attack(0.01)
-                  engine.decay(2)
-                  engine.hz(MusicUtil.note_num_to_freq(note_list[j]))            
+                  engine.decay(1)
+                  print(note_list[j])
+                  if MusicUtil.note_num_to_name(note_list[j])~="B" then
+                    engine.hz(MusicUtil.note_num_to_freq(note_list[j]+24))            
+                  end
 
                   -- arm connected
                   for _,j2 in ipairs(to) do 
-                    notework[j2].armed=true
+                    if not notework[j2].armed then
+                      notework[j2].armed=true
+                    end
                   end
 
                   -- disarm current
@@ -78,6 +120,7 @@ function init()
     }
   end
   lattice:start()
+  playing=true
 
   -- -- define the chord lists
   -- chord_list={
@@ -108,7 +151,8 @@ function generate_scale(root)
     for _, note in ipairs(MusicUtil.generate_scale_of_length(root,1,8)) do
       table.insert(note_list,note)
     end
-    root=note_list[#note_list-3]
+    root=note_list[#note_list-3] -- plonky type keyboard
+    -- root=root+12
   end
 end
 
@@ -124,7 +168,7 @@ function notework_initialize(seed,preserve_connections)
     -- generate random notework lattice
     notework[i]={
       armed=false,
-      er=er.random2(math.random(4,16)),
+      er=er.random(math.random(8,32)),
       pos=0,
       div=divisions[math.random(#divisions)],
       emitted=false,
@@ -158,7 +202,7 @@ end
 
 function notework_to(i)
   local to={}
-  for i,v in ipairs(notework_connections) do
+  for _,v in ipairs(notework_connections) do
     if v[1]==i then 
       table.insert(to,v[2])
     end
@@ -175,10 +219,10 @@ function notework_pos_change(d)
 end
 
 function notework_coord(i) 
-  local tr={32,10}
-  local spacing=8
-  local row=8-(i%8-1)
-  local col=1+math.floor(i/8)
+  local spacing=7
+  local tr={39,1}
+  local row=8-((i-1)%8)
+  local col=1+math.floor((i-0.01)/8)
   local x=col*spacing+tr[1]
   local y=row*spacing+tr[2]
   return x,y
@@ -235,15 +279,18 @@ function redraw()
   -- and curving DOWN connects right to left
   for i,nw in ipairs(notework) do 
     local x1,y1=notework_coord(i)
-    for _, j in ipairs(to) do
-      local x2,y2=notework_coord(j)
-      local d=distance_points(x1,y1,x2,y2)
-      -- TODO: add a little lfo to the the point so they sway
-      local p=perpendicular_points({x1,y1},{x2,y2},d/4)
-      screen.level(15)
-      screen.move(x1,y1)
-      screen.curve(p[1],p[2],p[1],p[2],x2,y2)
-      screen.stroke()
+    local to=notework_to(i)
+    if to then
+      for _, j in ipairs(to) do
+        local x2,y2=notework_coord(j)
+        local d=distance_points(x1,y1,x2,y2)
+        -- TODO: add a little lfo to the the point so they sway
+        local p=perpendicular_points({x1,y1},{x2,y2},math.sqrt(d)*4)
+        screen.level(15)
+        screen.move(x1,y1)
+        screen.curve(p[1],p[2],p[1],p[2],x2,y2)
+        screen.stroke()
+      end
     end
   end
 
@@ -252,13 +299,18 @@ function redraw()
     local x,y=notework_coord(i)
     -- erase the network topology directly around
     screen.level(0)
-    screen.circle(x,y,notework_pos==i and 5 or 3)
+    screen.circle(x,y,notework_pos==i and 5 or 2)
     screen.fill()
 
     -- draw a different sized dot
-    screen.level(nw.iterated and 15 or 2)
-    screen.circle(x,y,nw.emitted and 3 or 2)
+    screen.level(nw.iterated and 4 or 2)
+    screen.circle(x,y,2)
     screen.fill()
+    if nw.emitted then
+      screen.level(4)
+      screen.circle(x,y,3)
+      screen.stroke()
+    end
     if notework_pos==i then 
       screen.level(15)
       screen.circle(x,y,5)
@@ -295,5 +347,5 @@ function perpendicular_points(p1,p2,d)
   factor=factor*-1
   p3[i][1]=p3[i][1]+factor*(p1[2]-p2[2])
   p3[i][2]=p3[i][2]+factor*(p2[1]-p1[1])
-  return p3[1],p3[2]
+  return p3[2],p3[1]
 end

@@ -64,7 +64,7 @@ function er.print(r)
 end
 
 function er.random(n)
-    local k=math.random(1,n)
+    local k=math.random(1,math.floor(n/3))
     local w=math.random(0,n-1)
     return er.gen(n,k,w)
 end
@@ -73,8 +73,8 @@ function er.random2(n)
     local r=er.random(n)
     local n2=er.num_empty(r)
     if n2 > 0 then
-        local k2=math.random(0,n2-1)
-        local w2=math.random(0,n2-1)
+        local k2=math.random(0,n2>2 and 3 or 1)
+        local w2=math.random(0,n2>2 and 2 or 1)
         local r2=er.gen(n2,k2,w2)
         r=er.fill_empty(r,r2)
     end
