@@ -185,7 +185,7 @@ function redraw()
   screen.clear()
 
   -- show the network topology
-  -- TODO: using bezier curves
+  -- using bezier curves
   -- where curving UP connects left to right
   -- and curving DOWN connects right to left
   for i,nw in ipairs(notework) do 
@@ -193,6 +193,7 @@ function redraw()
     for _, j in ipairs(to) do
       local x2,y2=notework_coord(j)
       local d=distance_points(x1,y1,x2,y2)
+      -- TODO: add a little lfo to the the point so they sway
       local p=perpendicular_points({x1,y1},{x2,y2},d/4)
       screen.level(15)
       screen.move(x1,y1)
@@ -200,7 +201,6 @@ function redraw()
       screen.stroke()
     end
   end
-
 
   -- show the notework dots
   for i,nw in ipairs(notework) do
