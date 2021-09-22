@@ -213,3 +213,11 @@ end
 function rerun()
   norns.script.load(norns.state.script)
 end
+
+
+function perpendicular_points(p1,p2,d)
+  local p3={0,0}
+  for i=1,2 do 
+    p3[i]=(p1[i]+p2[i])/2
+  end
+end
