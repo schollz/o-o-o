@@ -22,6 +22,7 @@ local Ternary=include("aa/lib/ternary")
 
 engine.name="Fm1"
 
+
 function init()
   -- available divisions
   global_divisions={1/16,1/8}
@@ -32,10 +33,8 @@ function init()
   local scale_melody=generate_scale(24) -- generate scale starting with C
   nw_melody=Network:new()
   nw_melody:set_action(function(j)
-    engine.attack(0.01)
-    engine.decay(1)
     scale_melody_transpose=0
-    engine.hz(MusicUtil.note_num_to_freq(scale_melody[j+scale_melody_transpose]+24))
+    fm1({note=scale_melody[j+scale_melody_transpose]+24})
     -- if MusicUtil.note_num_to_name(scale_melody[j])~="B" then
     --   engine.hz(MusicUtil.note_num_to_freq(scale_melody[j]+24))
     -- end
@@ -128,6 +127,28 @@ function init()
   timer.count=-1
   timer.event=update_screen
   timer:start()
+end
+
+-- fm1 is a helper function for the engie
+function fm1(a)
+  if a.note then 
+    a.hz=MusicUtil.note_num_to_freq(a.note)
+  else
+    a.hz=a.hz or 220
+  end
+  a.amp=a.amp or 0.5 
+  a.attack=a.attack or 0.01
+  a.decay=a.decay or 2
+  a.ratio=a.ratio or 0.6
+  a.amount=a.amount or 0.36
+  engine.fm1(
+    a.hz,
+    a.amp,
+    a.attack,
+    a.decay,
+    a.ratio,
+    a.amount,
+  )
 end
 
 function generate_scale(root)
