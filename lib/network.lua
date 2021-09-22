@@ -27,7 +27,18 @@ function Network:init()
       div=global_divisions[math.random(#global_divisions)],
       emitted=false,
       iterated=false,
+      row=8-((i-1)%8),
+      col=1+math.floor((i-0.01)/8),
     }
+  end
+end
+
+function Network:rowcol_to_i(row,col)
+  -- TODO optimize this
+  for i,nw in ipairs(self.nw) do 
+    if nw.row==row and nw.col==col then 
+      do return i end 
+    end
   end
 end
 
@@ -93,7 +104,7 @@ function Network:toggle_play()
   self.playing=(not self.playing)
 end
 
--- web generates the list of all connected nodes
+-- web generates the unique list of all connected nodes
 function Network:networked(i)
   local r={}
   local rhave={}
@@ -190,10 +201,8 @@ end
 function Network:coord(i)
   local spacing=7
   local tr={39,1}
-  local row=8-((i-1)%8)
-  local col=1+math.floor((i-0.01)/8)
-  local x=col*spacing+tr[1]
-  local y=row*spacing+tr[2]
+  local x=self.nw[i].col*spacing+tr[1]
+  local y=self.nw[i].row*spacing+tr[2]
   return x,y
 end
 
