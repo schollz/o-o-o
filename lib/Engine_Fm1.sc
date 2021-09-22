@@ -14,7 +14,7 @@ Engine_Fm1 : CroneEngine {
 		SynthDef("Fm1",{
             arg hz=880,amp=0.5,pan=0,attack=0.01,decay=2,fm_ratio=0.6,fm_amount=0.36;
             var snd;
-            snd=SinOsc.ar(hz,SinOsc.ar(fm_ratio*hz)*fm_amount);
+            snd=Mix.ar(SinOsc.ar([hz,hz/2],SinOsc.ar(fm_ratio*hz)*fm_amount));
             snd=snd*EnvGen.ar(Env.perc(attack,decay,1.0,Select.kr(attack<decay,[[4,4.neg],4.neg])),doneAction:2);
 			snd=Pan2.ar(snd,pan)
             Out.ar(0,snd/6*amp);
