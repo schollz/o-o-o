@@ -19,10 +19,13 @@ engine.name="Fm1"
 function init()
 
   local divisions={1/32,1/16,1/8,1/4,1/2,1}
-  note_root=60
   playing=false
   notework_pos=1
+  generate_scale(24) -- generate scale starting with C
   notework_initialize(42)
+  -- generate some test connections
+  notework_connect(1,9)
+  notework_connect(9,10)
 
   local lattice=Lattice:new{
     ppqn=96
@@ -45,7 +48,7 @@ function init()
                 if (#to>0 or nw.armed) then 
                   notework[j].emitted=true
                   -- emit note 
-                  engine.hz(MusicUtil.note_num_to_freq(note_root+nw.note))            
+                  engine.hz(MusicUtil.note_num_to_freq(note_list[j]))            
 
                   -- arm connected
                   for _,j2 in ipairs(to) do 
@@ -93,6 +96,16 @@ function init()
   timer:start()
 end
 
+function generate_scale(root)
+  note_list={}
+  for i=1,8 do 
+    for _, note in ipairs(MusicUtil.generate_scale_of_length(root,1,8)) do
+      table.insert(note_list,note)
+    end
+    root=note_list[#note_list-3]
+  end
+end
+
 function notework_to(i)
   local to={}
   for i,v in ipairs(notework_connections) do
@@ -125,13 +138,27 @@ function notework_initialize(seed,preserve_connections)
   end
 end
 
-function notework_connect()
-  if keydown[k]==notework_pos or 
-    math.floor(keydown[k])==math.floor(notework_pos) then 
-    do return end 
-  end 
+function notework_connect(i,j)
   -- connect the first key to the second key
-  table.insert(notework_connections,{keydown[k],notework_pos})
+  -- if it isn't already connected
+  if not notework_is_connected(i,j) then 
+    table.insert(notework_connections,{i,j})
+  end
+end
+
+function notework_is_connected(i,j) 
+  for k,v in ipairs(notework_connections) do 
+    if i==v[1] and j==v[2] then
+      do return k end
+    end
+  end
+end
+
+function notework_disconnect(i,j)
+  local ind=notework_is_connected(i,j)
+  if ind then 
+    table.remove(notework_connections,ind)
+  end
 end
 
 function update_screen()
@@ -143,7 +170,7 @@ function key(k,z)
     keydown[k]=notework_pos
   else
     if z==0 and k==3 then
-      notework_connect()
+      notework_connect(keydown[k],notework_pos)
     end
     keydown[k]=nil
   end
