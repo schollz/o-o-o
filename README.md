@@ -1,5 +1,23 @@
-# aa
+# ??
 
-## questions
+a ??
 
-- should originators of an emission be silenced until the network finishes?
+?? is a ??.
+
+### Todo
+
+
+## Requirements
+
+- norns
+
+## Documentation
+
+- E2 
+
+
+## Install
+
+install with
+
+;install https://github.com/schollz/??
