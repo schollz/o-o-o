@@ -1,6 +1,9 @@
 // Engine_Fm1
 Engine_Fm1 : CroneEngine {
 	// <Fm1>
+	var fm1Attack=0.01;
+	var fm1Decay=2;
+	var fm1Amp=0.5;
 	// </Fm1>
 
 
@@ -20,7 +23,17 @@ Engine_Fm1 : CroneEngine {
 		}).add;
 
 		this.addCommand("hz","f",{ arg msg;
-    		Synth("Fm1",[\hz,msg[1]]);
+    		Synth("Fm1",[\hz,msg[1],\attack,fm1Attack,\decay,fm1Decay,\amp,fm1Amp]);
+		});
+
+		this.addCommand("attack","f",{ arg msg;
+			fm1Attack=msg[1];
+		});
+		this.addCommand("decay","f",{ arg msg;
+			fm1Decay=msg[1];
+		});
+		this.addCommand("amp","f",{ arg msg;
+			fm1Amp=msg[1];
 		});
 		// </Fm1>
 	}

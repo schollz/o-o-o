@@ -9,7 +9,10 @@
 --
 -- ?
 
+-- keep track of which keys are down
 local keydown={}
+
+-- import main libraries
 local er=include("aa/lib/er")
 local Lattice=require("lattice")
 local MusicUtil=require("musicutil")
@@ -17,8 +20,9 @@ local MusicUtil=require("musicutil")
 engine.name="Fm1"
 
 function init()
-
+  -- available divisions
   local divisions={1/32,1/16,1/8,1/4,1/2,1}
+
   playing=false
   notework_pos=1
   generate_scale(24) -- generate scale starting with C
@@ -48,6 +52,8 @@ function init()
                 if (#to>0 or nw.armed) then 
                   notework[j].emitted=true
                   -- emit note 
+                  engine.attack(0.01)
+                  engine.decay(2)
                   engine.hz(MusicUtil.note_num_to_freq(note_list[j]))            
 
                   -- arm connected
@@ -106,16 +112,6 @@ function generate_scale(root)
   end
 end
 
-function notework_to(i)
-  local to={}
-  for i,v in ipairs(notework_connections) do
-    if v[1]==i then 
-      table.insert(to,v[2])
-    end
-  end
-  return to
-end
-
 function notework_initialize(seed,preserve_connections)
   math.randomseed(seed)
   if notework==nil then
@@ -131,7 +127,6 @@ function notework_initialize(seed,preserve_connections)
       er=er.random2(math.random(4,16)),
       pos=0,
       div=divisions[math.random(#divisions)],
-      note=(i-1)%8,
       emitted=false,
       iterated=false,
     }
@@ -159,6 +154,34 @@ function notework_disconnect(i,j)
   if ind then 
     table.remove(notework_connections,ind)
   end
+end
+
+function notework_to(i)
+  local to={}
+  for i,v in ipairs(notework_connections) do
+    if v[1]==i then 
+      table.insert(to,v[2])
+    end
+  end
+  return to
+end
+
+function notework_pos_change(d)
+  local pos=notework_pos
+  pos=pos+d
+  if pos >= 1 and pos <= 64 then 
+    notework_pos=pos 
+  end
+end
+
+function notework_coord(i) 
+  local tr={32,10}
+  local spacing=8
+  local row=8-(i%8-1)
+  local col=1+math.floor(i/8)
+  local x=col*spacing+tr[1]
+  local y=row*spacing+tr[2]
+  return x,y
 end
 
 function update_screen()
@@ -200,14 +223,6 @@ function enc(k,d)
     elseif k==3 then
       notework_pos_change(d)
     end
-  end
-end
-
-function notework_pos_change(d)
-  local pos=notework_pos
-  pos=pos+d
-  if pos >= 1 and pos <= 64 then 
-    notework_pos=pos 
   end
 end
 
@@ -255,20 +270,9 @@ function redraw()
   screen.update()
 end
 
-function notework_coord(i) 
-  local tr={32,10}
-  local spacing=8
-  local row=8-(i%8-1)
-  local col=1+math.floor(i/8)
-  local x=col*spacing+tr[1]
-  local y=row*spacing+tr[2]
-  return x,y
-end
-
 function rerun()
   norns.script.load(norns.state.script)
 end
-
 
 function distance_points( x1, y1, x2, y2 )
   local dx = x1 - x2
