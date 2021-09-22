@@ -137,6 +137,7 @@ function fm1(a)
     a.hz=a.hz or 220
   end
   a.amp=a.amp or 0.5 
+  a.pan=a.pan or 0
   a.attack=a.attack or 0.01
   a.decay=a.decay or 2
   a.ratio=a.ratio or 0.6
@@ -144,6 +145,7 @@ function fm1(a)
   engine.fm1(
     a.hz,
     a.amp,
+    a.pan,
     a.attack,
     a.decay,
     a.ratio,
