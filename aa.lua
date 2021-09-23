@@ -139,33 +139,31 @@ function init()
   local scale_melody=generate_scale(24) -- generate scale starting with C
   networks={}
   for j,v in ipairs(instrument_list) do
-    if j>1 then
-      local i=j-1
-      local divs=nil
-      if v=="kick" then
-        divs={1,1,1/2,1/2,1/4,1/4,1/8,1/8}
-      end
-      networks[i]=Network:new({divs=divs,id=j})
-      networks[i]:set_action(function(nw)
-        if v=="pad" then
-          -- play three notes
-          local notes={pad_rows[nw.row]}
-          table.insert(notes,notes[1]+pad_cols[nw.col][1])
-          table.insert(notes,notes[2]+pad_cols[nw.col][2])
-          for _, note in ipairs(notes) do
-            fm1({note=scale_melody[note+24],pan=(note%12)/12-0.5,type=v,decay=clock.get_beat_sec()*16*nw.div})
-          end
-        else
-          local note=24+scale_melody[nw.id]
-          if v=="bass" then
-            note=note-24
-          end
-          fm1({amp=nw.amp,note=note,pan=nw.pan,type=v,decay=clock.get_beat_sec()*16*nw.div})
-        end
-      end)
-      networks[i]:toggle_play()
-      networks[i].name=v
+    local i=j-1
+    local divs=nil
+    if v=="kick" then
+      divs={1,1,1/2,1/2,1/4,1/4,1/8,1/8}
     end
+    networks[i]=Network:new({divs=divs,id=j})
+    networks[i]:set_action(function(nw)
+      if v=="pad" then
+        -- play three notes
+        local notes={pad_rows[nw.row]}
+        table.insert(notes,notes[1]+pad_cols[nw.col][1])
+        table.insert(notes,notes[2]+pad_cols[nw.col][2])
+        for _, note in ipairs(notes) do
+          fm1({note=scale_melody[note+24],pan=(note%12)/12-0.5,type=v,decay=clock.get_beat_sec()*16*nw.div})
+        end
+      else
+        local note=24+scale_melody[nw.id]
+        if v=="bass" then
+          note=note-24
+        end
+        fm1({amp=nw.amp,note=note,pan=nw.pan,type=v,decay=clock.get_beat_sec()*16*nw.div})
+      end
+    end)
+    networks[i]:toggle_play()
+    networks[i].name=v
   end
 
   -- nw_chords=Ternary:new()
@@ -194,23 +192,6 @@ function init()
     }
   end
   lattice:start()
-
-  -- nw_chords:toggle_play()
-
-  -- -- define the chord lists
-  -- chord_list={
-  --   {2,2,0},
-  --   {3,2,0},
-  --   {3,2,0},
-  --   {2,3,-1},
-  -- }
-  -- chord_current=1
-  -- choice_chord_list={}
-  -- for j=-2,2 do
-  --   for i,c in ipairs({{2,2},{2,3},{3,2}}) do
-  --     table.insert(choice_chord_list,{c[1],[c[2],j]})
-  --   end
-  -- end
 
   -- initialize metro for updating screen
   timer=metro.init()
@@ -318,23 +299,20 @@ function key(k,z)
       end
     end
   end
-  if keydown[1] then
+  if keydown[1] and z==1 then
     if k==1 then
     elseif k==2 then
     elseif k==3 then
       -- toggle playing
-      if global_page==1 and z==1 then nw_chords:toggle_play() end
-      if global_page>1 and z==1 then networks[global_page-1]:toggle_play() end
+      networks[global_page]:toggle_play()
     end
-  else
+  elseif z==1
     -- TODO: add connection/disconnection
     -- connect mode is time dependent (canceled after ~3 seconds)
     -- K2 disconnects when in connect mode
     if k==1 then
     elseif k==2 then
-      if global_page==1 and z==1 then nw_chords:remove_chord() end
     elseif k==3 then
-      if global_page==1 and z==1 then nw_chords:add_chord() end
     end
   end
 end
@@ -342,8 +320,7 @@ end
 function enc(k,d)
   if keydown[1] then
     if k==1 then
-      if global_page==1 then params:delta("paddb",d) end
-      if global_page>1 then params:delta(instrument_list[global_page-1].."db",d) end
+      params:delta(instrument_list[global_page].."db",d)
     elseif k==2 then
     else
     end
@@ -351,11 +328,9 @@ function enc(k,d)
     if k==1 then
       global_page=util.clamp(global_page+sign(d),1,1+#networks)
     elseif k==2 then
-      if global_page==1 then nw_chords:change_pos(sign(d)) end
-      if global_page>1 then networks[global_page-1]:change_col(d) end
+      networks[global_page]:change_col(d)
     elseif k==3 then
-      if global_page==1 then nw_chords:change_chord(-1*sign(d)) end
-      if global_page>1 then networks[global_page-1]:change_row(d) end
+      networks[global_page]:change_row(d)
     end
   end
 end
@@ -366,11 +341,10 @@ function redraw()
   if not keydown[1] then
     screen.level(15)
     screen.move(1,5)
-    screen.text(global_page==1 and "pad" or networks[global_page-1].name)
+    screen.text(networks[global_page].name)
   end
 
-  if global_page==1 then nw_chords:draw() end
-  if global_page>1 then networks[global_page-1]:draw() end
+  networks[global_page]:draw()
 
   screen.update()
 end

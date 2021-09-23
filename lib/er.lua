@@ -63,6 +63,13 @@ function er.print(r)
 end
 
 function er.random(n,density)
+  if density==1 then 
+    local r={}
+    for i=1,n do 
+      table.insert(r,true)
+    end
+    do return r end
+  end
   local k=math.random(1,math.floor(n*density))
   local w=math.random(0,n-1)
   return er.gen(n,k,w)
