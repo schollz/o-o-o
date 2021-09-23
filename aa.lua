@@ -19,6 +19,7 @@ local Lattice=require("lattice")
 local MusicUtil=require("musicutil")
 local Network=include("aa/lib/network")
 local Ternary=include("aa/lib/ternary")
+-- TODO: add JSON library
 
 engine.name="FM1"
 
@@ -107,22 +108,20 @@ function init()
   global_divisions={1/16,1/8}
   global_page=1
 
-  -- amp=0.5,
-  -- pan=math.random(-50,50)/100,
-  -- attack=0.01,
-  -- decay=2,
-  -- attack_curve=1,
-  -- decay_curve=-4,
-  -- mod_ratio=1,
-  -- car_ratio=1,
-  -- index=math.random(200,250)/100,
-  -- index_scale=1.2,
-  -- send=-15,
+  -- setup midi
+  local midi_devices={"none"}
+  midi_conn={} -- needs to be global
+  for _,dev in pairs(midi.devices) do
+    if dev.port~=nil then
+      table.insert(midi_devices,dev.name)
+      table.insert(midi_conn,midi.connect(dev.port))
+    end
+  end
 
   -- setup parameters
-  instrument_list={"pad","lead","bass","kick","snare"}
+  instrument_list={"lead","pad","bass","kick","snare"}
   for _,ins in ipairs(instrument_list) do
-    params:add_group(ins,13)
+    params:add_group(ins,15)
     params:add{type="control",id=ins.."db",name="volume",controlspec=controlspec.new(-96,12,'lin',0.1,-6,'',0.1/(12+96)),formatter=function(v)
       local val=math.floor(util.linlin(0,1,v.controlspec.minval,v.controlspec.maxval,v.raw)*10)/10
       return ((val<0) and "" or "+")..val.." dB"
@@ -146,6 +145,8 @@ function init()
     end}
     params:add_control(ins.."lpf","lpf",controlspec.WIDEFREQ)
     -- TODO: add optional midi out and crow out
+    params:add_option(ins.."midi_out","midi out",midi_devices)
+    params:add{type="control",id=ins.."midi_ch",name="midi out ch",controlspec=controlspec.new(1,16,'lin',1,1,'',1/16)}
   end
 
   -- setup networks
@@ -267,6 +268,16 @@ function fm1(a)
     a.eq_db,
     a.lpf
   )
+
+  -- send out midi if activated
+  if params:get(ins.."midi_out") > 1 then 
+    local conn=midi_conn[params:get(ins.."midi_out")]
+    conn:note_on(a.note,util.clamp(math.floor(a.amp*127),0,127))
+    clock.run(function()
+      clock.sleep(a.decay)
+      conn:note_off(a.note)
+    end)
+  end
 end
 
 function generate_scale(root)
