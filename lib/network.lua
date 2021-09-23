@@ -26,6 +26,7 @@ function Network:init()
       er=er.random(math.random(8,32)),
       pos=0,
       pan=math.random(-100,100)/200,
+      amp=math.random(25,75)/100,
       div=global_divisions[math.random(#global_divisions)],
       emitted=false,
       iterated=false,
@@ -207,7 +208,7 @@ end
 
 function Network:coord(i)
   local spacing=7
-  local tr={39,1}
+  local tr={35,1}
   local x=self.nw[i].col*spacing+tr[1]
   local y=self.nw[i].row*spacing+tr[2]
   return x,y
@@ -283,7 +284,11 @@ function Network:draw()
     screen.move(110,15)
     screen.text(self.amp)
   end
-  -- TODO: show if playing
+
+  -- show if playing
+  screen.level(15)
+  screen.move(125,5)
+  screen.text(self.playing and ">" or "||")
 end
 
 return Network

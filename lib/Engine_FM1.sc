@@ -67,7 +67,7 @@ Engine_FM1 : CroneEngine {
 		fm1Syn=Synth("FM1FX",[\in,fm1Bus],context.server);
 		context.server.sync;
 		
-		this.addCommand("fm1","fffffffffff",{ arg msg;
+		this.addCommand("fm1","ffffffffffff",{ arg msg;
 			Synth.before(fm1Syn,"FM1",[
 				\freq,msg[1],
 				\amp,msg[2],
@@ -77,9 +77,10 @@ Engine_FM1 : CroneEngine {
 				\cAtk,msg[6],
 				\cRel,msg[7],
 				\mRatio,msg[8],
-				\index,msg[9],
-				\iScale,msg[10],
-				\fxsend,msg[11],
+				\cRatio,msg[9],
+				\index,msg[10],
+				\iScale,msg[11],
+				\fxsend,msg[12],
 				\out,0,
 				\fx,fm1Syn,
 			]);

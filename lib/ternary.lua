@@ -74,18 +74,20 @@ end
 function Ternary:plot_points(ps)
   for i,p in ipairs(ps) do
     if i>1 then
+      screen.level(2)
       screen.line(p[1],p[2])
       screen.stroke()
     end
     screen.move(p[1],p[2])
-    screen.level(15)
+    screen.level(i==self.chord_current and 15 or 5)
     screen.circle(p[1],p[2],2)
     screen.fill()
-    if i==self.chord_current then
-      screen.circle(p[1],p[2],4)
-      screen.stroke()
-    end
-    screen.move(p[1],p[2])
+    -- TODO allow changing selection from playig
+    -- if i==self.chord_current then
+    --   screen.circle(p[1],p[2],4)
+    --   screen.stroke()
+    -- end
+    screen.move(p[1]+2,p[2])
   end
 end
 
@@ -122,12 +124,12 @@ function Ternary:draw()
 
     screen.level(15)
     screen.move(110,15)
-    screen.text(self.amp)
+    screen.text_right(self.amp)
   end
 
-  -- TODO: show if playing
+  -- show if playing
   screen.level(15)
-  screen.move(120,5)
+  screen.move(125,5)
   screen.text(self.playing and ">" or "||")
 end
 

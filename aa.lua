@@ -33,7 +33,7 @@ function init()
   nw_melody=Network:new()
   nw_melody:set_action(function(nw)
     scale_melody_transpose=0
-    fm1({amp=nw_melody.amp,note=24+scale_melody[nw.id+scale_melody_transpose],pan=nw.pan,type="lead"})
+    fm1({amp=nw_melody.amp*nw.amp,note=24+scale_melody[nw.id+scale_melody_transpose],pan=nw.pan,type="lead"})
     -- if MusicUtil.note_num_to_name(scale_melody[j])~="B" then
     --   engine.hz(MusicUtil.note_num_to_freq(scale_melody[j]+24))
     -- end
@@ -44,7 +44,7 @@ function init()
     for _,note in ipairs(notes) do
       print(note)
       print("Ternary note: "..scale_melody[note+24])
-      fm1({amp=nw_chords.amp,note=12+scale_melody[note+24],type="pad",attack=clock.get_beat_sec()*2,decay=clock.get_beat_sec()*2})
+      fm1({amp=nw_chords.amp,pan=note%8/8-0.5,note=12+scale_melody[note+24],type="pad",attack=clock.get_beat_sec()*4,decay=clock.get_beat_sec()/8})
     end
   end)
 
@@ -114,9 +114,23 @@ function fm1(a)
     attack_curve=1,
     decay_curve=-4,
     ratio=1,
+    ratio_curve=1,
     index=math.random(200,250)/100,
     iscale=1.2,
     send=-15,
+  }
+  patches["snare"]={
+    amp=0.5,
+    pan=math.random(-50,50)/100,
+    attack=0,
+    decay=0.1,
+    attack_curve=4,
+    decay_curve=-8,
+    ratio=1.5,
+    ratio_curve=45.9,
+    index=100,
+    iscale=1,
+    send=-12,
   }
   patches["pad"]={
     amp=0.5,
@@ -126,6 +140,7 @@ function fm1(a)
     attack_curve=0,
     decay_curve=0,
     ratio=1,
+    ratio_curve=1,
     index=1.5,
     iscale=math.random(2,4),
     send=-10,
@@ -142,6 +157,7 @@ function fm1(a)
   a.attack_curve=a.attack_curve or patches[a.type].attack_curve
   a.decay_curve=a.decay_curve or patches[a.type].decay_curve
   a.ratio=a.ratio or patches[a.type].ratio
+  a.ratio_curve=a.ratio_curve or patches[a.type].ratio_curve
   a.index=a.index or patches[a.type].index
   a.iscale=a.iscale or patches[a.type].iscale
   a.send=a.send or patches[a.type].send
@@ -154,6 +170,7 @@ function fm1(a)
     a.attack_curve,
     a.decay_curve,
     a.ratio,
+    a.ratio_curve,
     a.index,
     a.iscale,
     a.send
