@@ -148,8 +148,16 @@ function Network:networked(i)
   return r
 end
 
+function Network:connect_cancel()
+  self.pos_hold=nil
+end
+
 function Network:connect(i,j)
   if i==nil and j==nil then
+    if self.pos_hold==nil then
+      self.pos_hold=self.pos 
+      do return end
+    end
     i=self.pos_hold
     j=self.pos
   end
@@ -158,13 +166,13 @@ function Network:connect(i,j)
   end
   -- connect the first key to the second key
   -- if it isn't already connected
-  if not self:is_connected(i,j) then
+  if not self:is_connected_to(i,j) then
     table.insert(self.conn,{i,j})
   end
   self.pos_hold=nil
 end
 
-function Network:is_connected(i,j)
+function Network:is_connected_to(i,j)
   for k,v in ipairs(self.conn) do
     if i==v[1] and j==v[2] then
       do return k end
@@ -173,10 +181,34 @@ function Network:is_connected(i,j)
 end
 
 function Network:disconnect(i,j)
-  local ind=self:is_connected(i,j)
+  if i==nil then 
+    -- remove current connections
+    local ind=self:connections(self.pos)
+    local conn={}
+    for i,v in ipairs(self.conn) do 
+      if ind~=i then 
+        table.insert(conn,v)
+      end
+    end
+    self.conn=conn
+    do return end
+  end
+  local ind=self:is_connected_to(i,j)
   if ind then
     table.remove(self.conn,ind)
   end
+end
+
+-- connections returns the indicies for self.conn
+-- of any connection to/from node
+function Network:connections(i)
+  local conns={}
+  for k,v in ipairs(self.conn) do
+    if i==v[1] or i==v[2] then
+      table.insert(conns,k)
+    end
+  end
+  return conns
 end
 
 function Network:to(i)
@@ -221,10 +253,6 @@ function Network:change_col(d)
   if pos>=1 and pos<=64 then
     self.pos=pos
   end
-end
-
-function Network:connect_first()
-  self.pos_hold=self.pos
 end
 
 function Network:coord(i)

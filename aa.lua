@@ -37,6 +37,8 @@ patches["lead"]={
   index=math.random(200,250)/100,
   index_scale=1.2,
   send=-15,
+  divs={1/4,1/4,1/8,1/8,1/8,1/16,1/16,1/16},
+  dens={0.5,0.75,0.25,0.5,0.75,0.25,0.5,0.75},
 }
 patches["bass"]={
   amp=0.5,
@@ -50,6 +52,8 @@ patches["bass"]={
   index=1.5,
   index_scale=math.random(100,300)/100,
   send=-20,
+  divs={1/2,1/2,1/4,1/4,1/8,1/8,1/16,1/16},
+  dens={1,0.6,0.5,0.75,0.5,0.75,0.5,0.75},
 }
 patches["snare"]={
   amp=0.5,
@@ -63,6 +67,8 @@ patches["snare"]={
   index=100,
   index_scale=1,
   send=-12,
+  divs={1/2,1/2,1/4,1/4,1/8,1/8,1/16,1/16},
+  dens={1,0.6,0.5,0.75,0.5,0.75,0.5,0.75},
 }
 patches["kick"]={
   hz=25,
@@ -77,6 +83,8 @@ patches["kick"]={
   index=2,
   index_scale=8,
   send=-30,
+  divs={1/2,1/2,1/4,1/4,1/8,1/8,1/16,1/16},
+  dens={1,0.6,0.5,0.75,0.5,0.75,0.5,0.75},
 }
 patches["pad"]={
   amp=0.5,
@@ -90,6 +98,8 @@ patches["pad"]={
   index=1.5,
   index_scale=math.random(2,4),
   send=-10,
+  divs={1,1/2,1,1/2,1,1/2,1,1/2},
+  dens={1,1,1,1,1,1,1,1}
 }
 
 function init()
@@ -133,18 +143,12 @@ function init()
   params:add{type="control",id="root_note",name="root note",controlspec=controlspec.new(1,127,'lin',1,60,'',1/127)}
 
   -- setup networks
-  notework_pos=1
+  local scale_melody=generate_scale(24) -- generate scale starting with C
   local pad_rows={-4,-3,-2,-1,0,1,2,3}
   local pad_cols=[{2,2},{2,2},{2,3},{2,3},{3,2},{3,2},{3,1},{1,3}]
-  local scale_melody=generate_scale(24) -- generate scale starting with C
   networks={}
-  for j,v in ipairs(instrument_list) do
-    local i=j-1
-    local divs=nil
-    if v=="kick" then
-      divs={1,1,1/2,1/2,1/4,1/4,1/8,1/8}
-    end
-    networks[i]=Network:new({divs=divs,id=j})
+  for i,v in ipairs(instrument_list) do
+    networks[i]=Network:new({divs=patches[v].divs,dens=patches[v].dens,id=i})
     networks[i]:set_action(function(nw)
       if v=="pad" then
         -- play three notes
@@ -195,7 +199,7 @@ function init()
 
   -- initialize metro for updating screen
   timer=metro.init()
-  timer.time=1/5
+  timer.time=1/15
   timer.count=-1
   timer.event=update_screen
   timer:start()
@@ -302,17 +306,16 @@ function key(k,z)
   if keydown[1] and z==1 then
     if k==1 then
     elseif k==2 then
+      networks[global_page]:disconnect()
     elseif k==3 then
-      -- toggle playing
       networks[global_page]:toggle_play()
     end
   elseif z==1
-    -- TODO: add connection/disconnection
-    -- connect mode is time dependent (canceled after ~3 seconds)
-    -- K2 disconnects when in connect mode
     if k==1 then
     elseif k==2 then
+      networks[global_page]:connect_cancel()
     elseif k==3 then
+      networks[global_page]:connect()
     end
   end
 end
