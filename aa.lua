@@ -145,8 +145,9 @@ function init()
       return ((val<0) and "" or "+")..val.." dB"
     end}
     params:add_control(ins.."lpf","lpf",controlspec.WIDEFREQ)
+    -- TODO: add optional midi out and crow out
   end
-  
+
   -- setup networks
   local scale_melody=generate_scale(24) -- generate scale starting with C
   local pad_rows={-4,-3,-2,-1,0,1,2,3}
