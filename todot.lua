@@ -214,6 +214,14 @@ function init()
   timer.count=-1
   timer.event=update_screen
   timer:start()
+
+  -- add saving/loading handlers
+  params.action_write=function(filename,name)
+	todot_save(filename)
+  end
+  params.action_read=function(filename,silent)
+	todo_load(filename)
+  end
 end
 
 -- fm1 is a helper function for the engie
@@ -382,3 +390,32 @@ end
 function rerun()
   norns.script.load(norns.state.script)
 end
+
+function todot_save(filename)
+  print("todot: saving "..filename)
+  local data={}
+  for i,nw in ipairs(networks) do 
+	data[i]={}
+	data[i].nw=nw.nw
+	data[i].conn=nw.conn
+  end
+  file=io.open(filename,"w+")
+  io.output(file)
+  io.write(data)
+  io.close(file)
+end
+
+function todot_load(filename)
+  print("todot: loading "..filename)
+  local f=io.open(filename,"rb")
+  local content=f:read("*all")
+  f:close()
+
+  local data=json.decode(content)
+  for i,_ in ipairs(networks) do
+	networks[i].nw=data[i].nw
+	networks[i].conn=data[i].conn
+  end
+end
+
+
