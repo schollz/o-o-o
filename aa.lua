@@ -24,7 +24,7 @@ engine.name="FM1"
 
 -- define patches
 patches={}
--- TODO: add bass https://sccode.org/1-5bA
+-- https://sccode.org/1-5bA
 patches["lead"]={
   amp=0.5,
   pan=math.random(-50,50)/100,
@@ -316,6 +316,9 @@ function key(k,z)
       if global_page>1 and z==1 then networks[global_page-1]:toggle_play() end
     end
   else
+    -- TODO: add connection/disconnection
+    -- connect mode is time dependent (canceled after ~3 seconds)
+    -- K2 disconnects when in connect mode
     if k==1 then
     elseif k==2 then
       if global_page==1 and z==1 then nw_chords:remove_chord() end
