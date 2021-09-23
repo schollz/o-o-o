@@ -22,6 +22,7 @@ local er=include("aa/lib/er")
 local Lattice=require("lattice")
 local MusicUtil=require("musicutil")
 local Network=include("aa/lib/network")
+local Gridd=include("todot/lib/grid_")
 --local Ternary=include("aa/lib/ternary")
 -- TODO: add JSON library
 
@@ -217,11 +218,14 @@ function init()
 
   -- add saving/loading handlers
   params.action_write=function(filename,name)
-	todot_save(filename)
+	  todot_save(filename)
   end
   params.action_read=function(filename,silent)
-	todo_load(filename)
+  	todo_load(filename)
   end
+
+  -- add grid
+  grid_=gridd:new()
 end
 
 -- fm1 is a helper function for the engie
