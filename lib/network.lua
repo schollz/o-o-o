@@ -21,7 +21,7 @@ function Network:init()
   local divs=self.divs or {1/4,1/4,1/8,1/8,1/8,1/16,1/16,1/16}
   local dens=self.dens or {0.5,0.75,0.25,0.5,0.75,0.25,0.5,0.75}
   self.rowcol_to_i={}
-  for i=1,8 do 
+  for i=1,8 do
     self.rowcol_to_i[i]={}
     for j=1,8 do
       self.rowcol_to_i[i][j]=1
@@ -154,7 +154,7 @@ end
 function Network:connect(i,j)
   if i==nil and j==nil then
     if self.pos_hold==nil then
-      self.pos_hold=self.pos 
+      self.pos_hold=self.pos
       do return end
     end
     i=self.pos_hold
@@ -180,12 +180,12 @@ function Network:is_connected_to(i,j)
 end
 
 function Network:disconnect(i,j)
-  if i==nil then 
+  if i==nil then
     -- remove current connections
     local ind=self:connections(self.pos)
     local conn={}
-    for i,v in ipairs(self.conn) do 
-      if ind~=i then 
+    for i,v in ipairs(self.conn) do
+      if ind~=i then
         table.insert(conn,v)
       end
     end

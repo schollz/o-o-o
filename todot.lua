@@ -219,7 +219,7 @@ function init()
         local notes={pad_rows[nw.row]}
         table.insert(notes,notes[1]+pad_cols[nw.col][1])
         table.insert(notes,notes[2]+pad_cols[nw.col][2])
-        for _, note in ipairs(notes) do
+        for _,note in ipairs(notes) do
           fm1({note=scale_melody[note+24],pan=(note%12)/12-0.5,type=v,decay=clock.get_beat_sec()*16*nw.div})
         end
       else
@@ -270,10 +270,10 @@ function init()
 
   -- add saving/loading handlers
   params.action_write=function(filename,name)
-	  todot_save(filename)
+    todot_save(filename)
   end
   params.action_read=function(filename,silent)
-  	todo_load(filename)
+    todo_load(filename)
   end
 
   -- add grid
@@ -344,7 +344,7 @@ function fm1(a)
   )
 
   -- send out midi if activated
-  if params:get(ins.."midi_out") > 1 then 
+  if params:get(ins.."midi_out")>1 then
     local conn=midi_conn[params:get(ins.."midi_out")]
     conn:note_on(a.note,util.clamp(math.floor(a.amp*127),0,127))
     clock.run(function()
@@ -456,10 +456,10 @@ end
 function todot_save(filename)
   print("todot: saving "..filename)
   local data={}
-  for i,nw in ipairs(networks) do 
-	data[i]={}
-	data[i].nw=nw.nw
-	data[i].conn=nw.conn
+  for i,nw in ipairs(networks) do
+    data[i]={}
+    data[i].nw=nw.nw
+    data[i].conn=nw.conn
   end
   file=io.open(filename,"w+")
   io.output(file)
@@ -475,8 +475,8 @@ function todot_load(filename)
 
   local data=json.decode(content)
   for i,_ in ipairs(networks) do
-	networks[i].nw=data[i].nw
-	networks[i].conn=data[i].conn
+    networks[i].nw=data[i].nw
+    networks[i].conn=data[i].conn
   end
 end
 

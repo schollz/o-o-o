@@ -63,9 +63,9 @@ function er.print(r)
 end
 
 function er.random(n,density)
-  if density==1 then 
+  if density==1 then
     local r={}
-    for i=1,n do 
+    for i=1,n do
       table.insert(r,true)
     end
     do return r end
