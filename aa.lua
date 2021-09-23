@@ -75,7 +75,8 @@ function init()
   end
   lattice:start()
 
-  nw_chords:toggle_play()
+  -- nw_chords:toggle_play()
+  nw_melody:toggle_play()
 
   -- -- define the chord lists
   -- chord_list={
@@ -132,6 +133,20 @@ function fm1(a)
     iscale=1,
     send=-12,
   }
+  patches["kick"]={
+    hz=25,
+    amp=0.5,
+    pan=0,
+    attack=0,
+    decay=0.1,
+    attack_curve=4,
+    decay_curve=-4,
+    ratio=0.4,
+    ratio_curve=1,
+    index=2,
+    iscale=8,
+    send=-30,
+  }
   patches["pad"]={
     amp=0.5,
     pan=0,
@@ -149,6 +164,14 @@ function fm1(a)
     a.hz=MusicUtil.note_num_to_freq(a.note)/2
   else
     a.hz=a.hz or 220
+  end
+  if a.type=="kick" then
+    while a.hz>30 do
+      a.hz=a.hz/2
+    end
+    while a.amp<5 do
+      a.amp=a.amp*2
+    end
   end
   a.amp=a.amp or patches[a.type].amp
   a.pan=a.pan or patches[a.type].pan

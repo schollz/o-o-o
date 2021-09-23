@@ -38,7 +38,7 @@ Engine_FM1 : CroneEngine {
 			mod = SinOsc.ar(freq * mRatio, mul:freq * mRatio * iEnv);
 			car = SinOsc.ar(freq * cRatio + mod) * env * amp;
 			
-			car = Pan2.ar(car, pan);
+			car = Pan2.ar(car, pan)/8;
 
 			//direct out/reverb send
 			Out.ar(out, car);
@@ -57,7 +57,7 @@ Engine_FM1 : CroneEngine {
 			5.do{sig = AllpassN.ar(sig, 0.1, {Rand(0.01,0.099)}!2, 3)};
 			sig = LPF.ar(sig, lpf);
 			sig = LeakDC.ar(sig);
-			Out.ar(out, sig);
+			Out.ar(out, sig.poll);
 		}).add;
 		
 		// initialize fx synth and bus
@@ -82,7 +82,7 @@ Engine_FM1 : CroneEngine {
 				\iScale,msg[11],
 				\fxsend,msg[12],
 				\out,0,
-				\fx,fm1Syn,
+				\fx,fm1Bus,
 			]);
 		});
 		// </FM1>
