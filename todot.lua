@@ -1,5 +1,5 @@
 -- todot v0.0.1
--- ./\../\.
+-- connect the dots.
 --
 -- llllllll.co/t/todot
 --
