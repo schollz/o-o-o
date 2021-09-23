@@ -18,20 +18,25 @@ function Network:init()
   self.pos_hold=nil
   self.nw={}
   self.conn={}
+  local divs=self.divs or {1/4,1/4,1/8,1/8,1/8,1/16,1/16,1/16}
+  local dens=self.dens or {0.5,0.75,0.25,0.5,0.75,0.25,0.5,0.75}
   for i=1,64 do
+    local row=8-((i-1)%8)
+    local col=math.floor((i-0.01)/8)+1
     -- generate random notework lattice
     self.nw[i]={
       id=i,
       armed=false,
-      er=er.random(math.random(8,32)),
+      er=er.random(math.random(8,32),dens[col]),
       pos=0,
       pan=math.random(-100,100)/200,
       amp=math.random(25,75)/100,
-      div=global_divisions[math.random(#global_divisions)],
+      -- div=global_divisions[math.random(#global_divisions)],
+      div=divs[col],
       emitted=false,
       iterated=false,
-      row=8-((i-1)%8),
-      col=1+math.floor((i-0.01)/8),
+      row=row,
+      col=col,
     }
   end
 end

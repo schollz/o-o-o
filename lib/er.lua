@@ -62,14 +62,14 @@ function er.print(r)
   end
 end
 
-function er.random(n)
-  local k=math.random(1,math.floor(n*2/3))
+function er.random(n,density)
+  local k=math.random(1,math.floor(n*density))
   local w=math.random(0,n-1)
   return er.gen(n,k,w)
 end
 
-function er.random2(n)
-  local r=er.random(n)
+function er.random2(n,density)
+  local r=er.random(n,density)
   local n2=er.num_empty(r)
   if n2>0 then
     local k2=math.random(0,n2>2 and 3 or 1)
