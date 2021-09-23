@@ -17,13 +17,13 @@ if not string.find(package.cpath,"/home/we/dust/code/todot/lib/") then
   package.cpath=package.cpath..";/home/we/dust/code/todot/lib/?.so"
 end
 json=require("cjson")
-include("aa/lib/utils")
-local er=include("aa/lib/er")
+include("todot/lib/utils")
+local er=include("todot/lib/er")
 local Lattice=require("lattice")
 local MusicUtil=require("musicutil")
-local Network=include("aa/lib/network")
+local Network=include("todot/lib/network")
 local Gridd=include("todot/lib/grid_")
---local Ternary=include("aa/lib/ternary")
+--local Ternary=include("todot/lib/ternary")
 -- TODO: add JSON library
 
 engine.name="FM1"
