@@ -59,7 +59,7 @@ end
 
 function Network:emit(step,div)
   for j,nw in ipairs(self.nw) do
-    if nw.div==div then
+    if nw.div*util.clamp(global_div_scales[params:get(instrument_list[self.id].."div_scale")],1/16,1)==div then
       self.nw[j].pos=(step%#nw.er)+1
       self.nw[j].iterated=nw.er[self.nw[j].pos]
       if not self.playing then
