@@ -22,11 +22,110 @@ local Ternary=include("aa/lib/ternary")
 
 engine.name="FM1"
 
+-- define patches
+patches={}
+-- TODO: add bass https://sccode.org/1-5bA
+patches["lead"]={
+  amp=0.5,
+  pan=math.random(-50,50)/100,
+  attack=0.01,
+  decay=2,
+  attack_curve=1,
+  decay_curve=-4,
+  ratio=1,
+  ratio_curve=1,
+  index=math.random(200,250)/100,
+  iscale=1.2,
+  send=-15,
+}
+patches["bass"]={
+  amp=0.5,
+  pan=math.random(-25,25)/100,
+  attack=0.0,
+  decay=2,
+  attack_curve=4,
+  decay_curve=-4,
+  ratio=2,
+  ratio_curve=1,
+  index=1.5,
+  iscale=math.random(100,300)/100,
+  send=-20,
+}
+patches["snare"]={
+  amp=0.5,
+  pan=math.random(-50,50)/100,
+  attack=0,
+  decay=0.1,
+  attack_curve=4,
+  decay_curve=-8,
+  ratio=1.5,
+  ratio_curve=45.9,
+  index=100,
+  iscale=1,
+  send=-12,
+}
+patches["kick"]={
+  hz=25,
+  amp=0.5,
+  pan=0,
+  attack=0,
+  decay=0.1,
+  attack_curve=4,
+  decay_curve=-4,
+  ratio=0.4,
+  ratio_curve=1,
+  index=2,
+  iscale=8,
+  send=-30,
+}
+patches["pad"]={
+  amp=0.5,
+  pan=0,
+  attack=2,
+  decay=2,
+  attack_curve=0,
+  decay_curve=0,
+  ratio=1,
+  ratio_curve=1,
+  index=1.5,
+  iscale=math.random(2,4),
+  send=-10,
+}
+
 function init()
   -- available divisions
   global_divisions={1/16,1/8}
   global_page=1
 
+  -- amp=0.5,
+  -- pan=math.random(-50,50)/100,
+  -- attack=0.01,
+  -- decay=2,
+  -- attack_curve=1,
+  -- decay_curve=-4,
+  -- ratio=1,
+  -- ratio_curve=1,
+  -- index=math.random(200,250)/100,
+  -- iscale=1.2,
+  -- send=-15,
+
+  -- setup parameters
+  instrument_list={"pad","lead","bass","kick","snare"}
+  for _,ins in ipairs(instrument_list) do
+    params:add_group(ins,5)
+    params:add{type="control",id=ins.."db",name="volume",controlspec=controlspec.new(-96,12,'lin',0.1,-6,'',0.1/(12+96)),formatter=function(v)
+      local val=math.floor(util.linlin(0,1,v.controlspec.minval,v.controlspec.maxval,v.raw)*10)/10
+      return ((val<0) and "" or "+")..val.." dB"
+    end}
+    params:add{type="control",id=ins.."attack",name="attack",controlspec=controlspec.new(0,6,'lin',0.01,patches[ins].attack,'s',0.01/6)}
+    params:add{type="control",id=ins.."decay",name="decay",controlspec=controlspec.new(0,6,'lin',0.01,patches[ins].decay,'s',0.01/6)}
+    params:add{type="control",id=ins.."attack_curve",name="attack curve",controlspec=controlspec.new(-8,8,'lin',1,patches[ins].attack_curve,'',1/16)}
+    params:add{type="control",id=ins.."decay_curve",name="decay curve",controlspec=controlspec.new(-8,8,'lin',1,patches[ins].decay_curve,'',1/16)}
+    params:add{type="control",id=ins.."mod_ratio",name="mod ratio",controlspec=controlspec.new(0,2,'lin',0.1,patches[ins].ratio,'',0.1/2)}
+    params:add{type="control",id=ins.."carrier_ratio",name="carrier ratio",controlspec=controlspec.new(0,50,'lin',0.1,patches[ins].ratio,'',0.1/50)}
+  end
+
+  -- setup networks
   notework_pos=1
   local scale_melody_transpose=0
   local scale_melody=generate_scale(24) -- generate scale starting with C
@@ -106,74 +205,7 @@ function fm1(a)
   if a.type==nil then
     a.type="lead"
   end
-  patches={}
-  -- TODO: add bass https://sccode.org/1-5bA
-  patches["lead"]={
-    amp=0.5,
-    pan=math.random(-50,50)/100,
-    attack=0.01,
-    decay=2,
-    attack_curve=1,
-    decay_curve=-4,
-    ratio=1,
-    ratio_curve=1,
-    index=math.random(200,250)/100,
-    iscale=1.2,
-    send=-15,
-  }
-  patches["bass"]={
-    amp=0.5,
-    pan=math.random(-25,25)/100,
-    attack=0.0,
-    decay=2,
-    attack_curve=4,
-    decay_curve=-4,
-    ratio=2,
-    ratio_curve=1,
-    index=1.5,
-    iscale=math.random(100,300)/100,
-    send=-20,
-  }
-  patches["snare"]={
-    amp=0.5,
-    pan=math.random(-50,50)/100,
-    attack=0,
-    decay=0.1,
-    attack_curve=4,
-    decay_curve=-8,
-    ratio=1.5,
-    ratio_curve=45.9,
-    index=100,
-    iscale=1,
-    send=-12,
-  }
-  patches["kick"]={
-    hz=25,
-    amp=0.5,
-    pan=0,
-    attack=0,
-    decay=0.1,
-    attack_curve=4,
-    decay_curve=-4,
-    ratio=0.4,
-    ratio_curve=1,
-    index=2,
-    iscale=8,
-    send=-30,
-  }
-  patches["pad"]={
-    amp=0.5,
-    pan=0,
-    attack=2,
-    decay=2,
-    attack_curve=0,
-    decay_curve=0,
-    ratio=1,
-    ratio_curve=1,
-    index=1.5,
-    iscale=math.random(2,4),
-    send=-10,
-  }
+
   if a.note then
     a.hz=MusicUtil.note_num_to_freq(a.note)/2
   else
