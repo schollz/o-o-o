@@ -18,6 +18,16 @@ Engine_Fm1 : CroneEngine {
             snd=snd*EnvGen.ar(Env.perc(attack,decay,1.0,Select.kr(attack<decay,[[4,4.neg],4.neg])),doneAction:2);
 			snd=Pan2.ar(snd,pan)
             Out.ar(0,snd/6*amp);
+	arg hz=220,amp=0.5,pan=0,
+	attack=0.01,decay=2,
+	fm_ratio=0.71875,fm_amount=0.8;
+	var snd;
+	snd=SinOsc.ar(hz*2);
+	snd=snd+Mix.ar(SinOsc.ar([hz*2,hz],SinOsc.ar(fm_ratio*hz)*fm_amount*2*pi,mul:0.1));
+	snd=snd*EnvGen.ar(Env.perc(attack,decay,1.0,Select.kr(attack<decay,[[4,4.neg],4.neg])),Impulse.kr(1),doneAction:2);
+	snd=Pan2.ar(snd,pan);
+	snd=MoogFF.ar(snd,4*hz);
+	Out.ar(0,snd*amp);
 		}).add;
 
 		this.addCommand("fm1","fffffff",{ arg msg;
