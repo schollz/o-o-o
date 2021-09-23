@@ -32,10 +32,10 @@ patches["lead"]={
   decay=2,
   attack_curve=1,
   decay_curve=-4,
-  ratio=1,
-  ratio_curve=1,
+  mod_ratio=1,
+  car_ratio=1,
   index=math.random(200,250)/100,
-  iscale=1.2,
+  index_scale=1.2,
   send=-15,
 }
 patches["bass"]={
@@ -45,10 +45,10 @@ patches["bass"]={
   decay=2,
   attack_curve=4,
   decay_curve=-4,
-  ratio=2,
-  ratio_curve=1,
+  mod_ratio=2,
+  car_ratio=1,
   index=1.5,
-  iscale=math.random(100,300)/100,
+  index_scale=math.random(100,300)/100,
   send=-20,
 }
 patches["snare"]={
@@ -58,10 +58,10 @@ patches["snare"]={
   decay=0.1,
   attack_curve=4,
   decay_curve=-8,
-  ratio=1.5,
-  ratio_curve=45.9,
+  mod_ratio=1.5,
+  car_ratio=45.9,
   index=100,
-  iscale=1,
+  index_scale=1,
   send=-12,
 }
 patches["kick"]={
@@ -72,10 +72,10 @@ patches["kick"]={
   decay=0.1,
   attack_curve=4,
   decay_curve=-4,
-  ratio=0.4,
-  ratio_curve=1,
+  mod_ratio=0.4,
+  car_ratio=1,
   index=2,
-  iscale=8,
+  index_scale=8,
   send=-30,
 }
 patches["pad"]={
@@ -85,10 +85,10 @@ patches["pad"]={
   decay=2,
   attack_curve=0,
   decay_curve=0,
-  ratio=1,
-  ratio_curve=1,
+  mod_ratio=1,
+  car_ratio=1,
   index=1.5,
-  iscale=math.random(2,4),
+  index_scale=math.random(2,4),
   send=-10,
 }
 
@@ -103,16 +103,16 @@ function init()
   -- decay=2,
   -- attack_curve=1,
   -- decay_curve=-4,
-  -- ratio=1,
-  -- ratio_curve=1,
+  -- mod_ratio=1,
+  -- car_ratio=1,
   -- index=math.random(200,250)/100,
-  -- iscale=1.2,
+  -- index_scale=1.2,
   -- send=-15,
 
   -- setup parameters
   instrument_list={"pad","lead","bass","kick","snare"}
   for _,ins in ipairs(instrument_list) do
-    params:add_group(ins,5)
+    params:add_group(ins,10)
     params:add{type="control",id=ins.."db",name="volume",controlspec=controlspec.new(-96,12,'lin',0.1,-6,'',0.1/(12+96)),formatter=function(v)
       local val=math.floor(util.linlin(0,1,v.controlspec.minval,v.controlspec.maxval,v.raw)*10)/10
       return ((val<0) and "" or "+")..val.." dB"
@@ -121,8 +121,14 @@ function init()
     params:add{type="control",id=ins.."decay",name="decay",controlspec=controlspec.new(0,6,'lin',0.01,patches[ins].decay,'s',0.01/6)}
     params:add{type="control",id=ins.."attack_curve",name="attack curve",controlspec=controlspec.new(-8,8,'lin',1,patches[ins].attack_curve,'',1/16)}
     params:add{type="control",id=ins.."decay_curve",name="decay curve",controlspec=controlspec.new(-8,8,'lin',1,patches[ins].decay_curve,'',1/16)}
-    params:add{type="control",id=ins.."mod_ratio",name="mod ratio",controlspec=controlspec.new(0,2,'lin',0.1,patches[ins].ratio,'',0.1/2)}
-    params:add{type="control",id=ins.."carrier_ratio",name="carrier ratio",controlspec=controlspec.new(0,50,'lin',0.1,patches[ins].ratio,'',0.1/50)}
+    params:add{type="control",id=ins.."mod_ratio",name="mod ratio",controlspec=controlspec.new(0,2,'lin',0.01,patches[ins].mod_ratio,'x',0.01/2)}
+    params:add{type="control",id=ins.."car_ratio",name="car ratio",controlspec=controlspec.new(0,50,'lin',0.01,patches[ins].car_ratio,'x',0.01/50)}
+    params:add{type="control",id=ins.."index",name="index",controlspec=controlspec.new(0,200,'lin',0.1,patches[ins].index,'',0.1/200)}
+    params:add{type="control",id=ins.."index_scale",name="index scale",controlspec=controlspec.new(0,10,'lin',0.1,patches[ins].index_scale,'',0.1/10)}
+    params:add{type="control",id=ins.."reverb",name="reverb send",controlspec=controlspec.new(-96,12,'lin',0.1,patches[ins].send,'',0.1/(12+96)),formatter=function(v)
+      local val=math.floor(util.linlin(0,1,v.controlspec.minval,v.controlspec.maxval,v.raw)*10)/10
+      return ((val<0) and "" or "+")..val.." dB"
+    end}
   end
 
   -- setup networks
@@ -142,7 +148,7 @@ function init()
       if v=="bass" then
         note=note-24
       end
-      fm1({amp=networks[i].amp*nw.amp,note=note,pan=nw.pan,type=v,decay=clock.get_beat_sec()*16*nw.div})
+      fm1({amp=nw.amp,note=note,pan=nw.pan,type=v,decay=clock.get_beat_sec()*16*nw.div})
     end)
     networks[i]:toggle_play()
     networks[i].name=v
@@ -153,7 +159,7 @@ function init()
     for _,note in ipairs(notes) do
       print(note)
       print("Ternary note: "..scale_melody[note+24])
-      fm1({amp=nw_chords.amp,pan=note%8/8-0.5,note=12+scale_melody[note+24],type="pad",attack=clock.get_beat_sec()*4,decay=clock.get_beat_sec()/8})
+      fm1({pan=note%8/8-0.5,note=12+scale_melody[note+24],type="pad",attack=clock.get_beat_sec()*4,decay=clock.get_beat_sec()/8})
     end
   end)
 
@@ -220,17 +226,22 @@ function fm1(a)
     end
     a.decay=0.1
   end
-  a.amp=a.amp or patches[a.type].amp
-  a.pan=a.pan or patches[a.type].pan
-  a.attack=a.attack or patches[a.type].attack
-  a.decay=a.decay or patches[a.type].decay
-  a.attack_curve=a.attack_curve or patches[a.type].attack_curve
-  a.decay_curve=a.decay_curve or patches[a.type].decay_curve
-  a.ratio=a.ratio or patches[a.type].ratio
-  a.ratio_curve=a.ratio_curve or patches[a.type].ratio_curve
-  a.index=a.index or patches[a.type].index
-  a.iscale=a.iscale or patches[a.type].iscale
-  a.send=a.send or patches[a.type].send
+  if a.amp then
+    a.amp=a.amp*util.dbamp(params:get(a.type.."db"))
+  else
+    a.amp=util.dbamp(params:get(a.type.."db"))
+  end
+  a.pan=a.pan or 0
+  a.attack=a.attack or params:get(a.type.."attack")
+  a.decay=a.decay or params:get(a.type.."decay")
+  a.attack_curve=a.attack_curve or params:get(a.type.."attack_curve")
+  a.decay_curve=a.decay_curve or params:get(a.type.."decay_curve")
+  a.mod_ratio=a.mod_ratio or params:get(a.type.."mod_ratio")
+  a.car_ratio=a.car_ratio or params:get(a.type.."car_ratio")
+  a.index=a.index or params:get(a.type.."index")
+  a.index_scale=a.index_scale or params:get(a.type.."index_scale")
+  a.send=a.send or params:get(a.type.."reverb")
+  tab.print(a)
   engine.fm1(
     a.hz,
     a.amp,
@@ -239,10 +250,10 @@ function fm1(a)
     a.decay,
     a.attack_curve,
     a.decay_curve,
-    a.ratio,
-    a.ratio_curve,
+    a.mod_ratio,
+    a.car_ratio,
     a.index,
-    a.iscale,
+    a.index_scale,
     a.send
   )
 end
@@ -340,7 +351,7 @@ function redraw()
 
   screen.level(15)
   screen.move(1,5)
-  screen.text(global_page==1 and "chords" or networks[global_page-1].name)
+  screen.text(global_page==1 and "pad" or networks[global_page-1].name)
   screen.update()
 end
 
