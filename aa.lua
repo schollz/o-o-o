@@ -130,10 +130,12 @@ function init()
       return ((val<0) and "" or "+")..val.." dB"
     end}
   end
+  params:add{type="control",id="root_note",name="root note",controlspec=controlspec.new(1,127,'lin',1,60,'',1/127)}
 
   -- setup networks
   notework_pos=1
-  local scale_melody_transpose=0
+  local pad_rows={-4,-3,-2,-1,0,1,2,3}
+  local pad_cols=[{2,2},{2,2},{2,3},{2,3},{3,2},{3,2},{3,1},{1,3}]
   local scale_melody=generate_scale(24) -- generate scale starting with C
   networks={}
   for j,v in ipairs(instrument_list) do
@@ -145,26 +147,35 @@ function init()
       end
       networks[i]=Network:new({divs=divs,id=j})
       networks[i]:set_action(function(nw)
-        scale_melody_transpose=0
-        local note=24+scale_melody[nw.id+scale_melody_transpose]
-        if v=="bass" then
-          note=note-24
+        if v=="pad" then
+          -- play three notes
+          local notes={pad_rows[nw.row]}
+          table.insert(notes,notes[1]+pad_cols[nw.col][1])
+          table.insert(notes,notes[2]+pad_cols[nw.col][2])
+          for _, note in ipairs(notes) do
+            fm1({note=scale_melody[note+24],pan=(note%12)/12-0.5,type=v,decay=clock.get_beat_sec()*16*nw.div})
+          end
+        else
+          local note=24+scale_melody[nw.id]
+          if v=="bass" then
+            note=note-24
+          end
+          fm1({amp=nw.amp,note=note,pan=nw.pan,type=v,decay=clock.get_beat_sec()*16*nw.div})
         end
-        fm1({amp=nw.amp,note=note,pan=nw.pan,type=v,decay=clock.get_beat_sec()*16*nw.div})
       end)
       networks[i]:toggle_play()
       networks[i].name=v
     end
   end
 
-  nw_chords=Ternary:new()
-  nw_chords:set_action(function(notes)
-    for _,note in ipairs(notes) do
-      print(note)
-      print("Ternary note: "..scale_melody[note+24])
-      fm1({pan=note%8/8-0.5,note=12+scale_melody[note+24],type="pad",attack=clock.get_beat_sec()*4,decay=clock.get_beat_sec()/8})
-    end
-  end)
+  -- nw_chords=Ternary:new()
+  -- nw_chords:set_action(function(notes)
+  --   for _,note in ipairs(notes) do
+  --     print(note)
+  --     print("Ternary note: "..scale_melody[note+24])
+  --     fm1({pan=note%8/8-0.5,note=12+scale_melody[note+24],type="pad",attack=clock.get_beat_sec()*4,decay=clock.get_beat_sec()/8})
+  --   end
+  -- end)
 
   local lattice=Lattice:new{
     ppqn=96
