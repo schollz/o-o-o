@@ -1,7 +1,7 @@
--- new script v0.0.1
--- ?
+-- todot v0.0.1
+-- ./\../\.
 --
--- llllllll.co/t/?
+-- llllllll.co/t/todot
 --
 --
 --
@@ -13,12 +13,16 @@
 keydown={}
 
 -- import main libraries
+if not string.find(package.cpath,"/home/we/dust/code/todot/lib/") then
+  package.cpath=package.cpath..";/home/we/dust/code/todot/lib/?.so"
+end
+json=require("cjson")
 include("aa/lib/utils")
 local er=include("aa/lib/er")
 local Lattice=require("lattice")
 local MusicUtil=require("musicutil")
 local Network=include("aa/lib/network")
-local Ternary=include("aa/lib/ternary")
+--local Ternary=include("aa/lib/ternary")
 -- TODO: add JSON library
 
 engine.name="FM1"
