@@ -117,14 +117,19 @@ function Ternary:draw()
 
   if keydown[1] then
     screen.level(15)
-    screen.move(1,5)
-    screen.text("e2 select chord")
-    screen.move(1,12)
-    screen.text("e3 change type")
+    local help={{"k2","takes"},{"k3","gives"},{"e2","selects"},{"e3","changes"}}
+    local y=7
+    for _,h in ipairs(help) do
+      screen.move(1,y)
+      screen.text(h[1])
+      y=y+7
+      screen.move(5,y)
+      screen.text(h[2])
+      y=y+8
+    end
 
-    screen.level(15)
-    screen.move(110,15)
-    screen.text_right(self.amp)
+    screen.move(128,15)
+    screen.text_right((params:get("paddb")>0 and "+" or "")..params:get("paddb").." dB")
   end
 
   -- show if playing

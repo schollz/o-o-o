@@ -136,22 +136,25 @@ function init()
   local scale_melody_transpose=0
   local scale_melody=generate_scale(24) -- generate scale starting with C
   networks={}
-  for i,v in ipairs({"kick","bass","lead","snare"}) do
-    local divs=nil
-    if v=="kick" then
-      divs={1,1,1/2,1/2,1/4,1/4,1/8,1/8}
-    end
-    networks[i]=Network:new({divs=divs})
-    networks[i]:set_action(function(nw)
-      scale_melody_transpose=0
-      local note=24+scale_melody[nw.id+scale_melody_transpose]
-      if v=="bass" then
-        note=note-24
+  for j,v in ipairs(instrument_list) do
+    if j>1 then
+      local i=j-1
+      local divs=nil
+      if v=="kick" then
+        divs={1,1,1/2,1/2,1/4,1/4,1/8,1/8}
       end
-      fm1({amp=nw.amp,note=note,pan=nw.pan,type=v,decay=clock.get_beat_sec()*16*nw.div})
-    end)
-    networks[i]:toggle_play()
-    networks[i].name=v
+      networks[i]=Network:new({divs=divs,id=j})
+      networks[i]:set_action(function(nw)
+        scale_melody_transpose=0
+        local note=24+scale_melody[nw.id+scale_melody_transpose]
+        if v=="bass" then
+          note=note-24
+        end
+        fm1({amp=nw.amp,note=note,pan=nw.pan,type=v,decay=clock.get_beat_sec()*16*nw.div})
+      end)
+      networks[i]:toggle_play()
+      networks[i].name=v
+    end
   end
 
   nw_chords=Ternary:new()
@@ -325,8 +328,8 @@ end
 function enc(k,d)
   if keydown[1] then
     if k==1 then
-      if global_page==1 then nw_chords:change_amp(d/100) end
-      if global_page>1 then networks[global_page-1]:change_amp(d/100) end
+      if global_page==1 then params:delta("paddb",d) end
+      if global_page>1 then params:delta(instrument_list[global_page-1].."db",d) end
     elseif k==2 then
     else
     end
@@ -346,12 +349,15 @@ end
 function redraw()
   screen.clear()
 
+  if not keydown[1] then
+    screen.level(15)
+    screen.move(1,5)
+    screen.text(global_page==1 and "pad" or networks[global_page-1].name)
+  end
+
   if global_page==1 then nw_chords:draw() end
   if global_page>1 then networks[global_page-1]:draw() end
 
-  screen.level(15)
-  screen.move(1,5)
-  screen.text(global_page==1 and "pad" or networks[global_page-1].name)
   screen.update()
 end
 

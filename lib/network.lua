@@ -297,13 +297,20 @@ function Network:draw()
 
   if keydown[1] then
     screen.level(15)
-    screen.move(1,5)
-    screen.text("e2/e3 move")
-    screen.move(1,12)
-    screen.text("hold k3 to connect")
-    screen.level(15)
-    screen.move(110,15)
-    screen.text(self.amp)
+    local help={{"k2","takes"},{"k3","gives"},{"e2/e3","moves"}}
+    local y=7
+    for _,h in ipairs(help) do
+      screen.move(1,y)
+      screen.text(h[1])
+      y=y+7
+      screen.move(5,y)
+      screen.text(h[2])
+      y=y+10
+    end
+
+    screen.move(128,15)
+    local db=params:get(instrument_list[self.id].."db")
+    screen.text_right((db>0 and "+" or "")..db.." dB")
   end
 
   -- show if playing
