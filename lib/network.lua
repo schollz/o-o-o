@@ -325,7 +325,7 @@ function Network:draw()
 
   if keydown[1] then
     screen.level(15)
-    local help={{"k2","takes"},{"k3","gives"},{"e2/e3","moves"}}
+    local help={{"k3","connect"},{"k2","cancel"},{"k1+k2","remove"},{"e2/e3","moves"}}
     local y=7
     for _,h in ipairs(help) do
       screen.move(1,y)
@@ -333,7 +333,7 @@ function Network:draw()
       y=y+7
       screen.move(5,y)
       screen.text(h[2])
-      y=y+10
+      y=y+8
     end
 
     screen.move(128,15)
