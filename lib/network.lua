@@ -20,10 +20,18 @@ function Network:init()
   self.conn={}
   local divs=self.divs or {1/4,1/4,1/8,1/8,1/8,1/16,1/16,1/16}
   local dens=self.dens or {0.5,0.75,0.25,0.5,0.75,0.25,0.5,0.75}
+  self.rowcol_to_i={}
+  for i=1,8 do 
+    self.rowcol_to_i[i]={}
+    for j=1,8 do
+      self.rowcol_to_i[i][j]=1
+    end
+  end
   for i=1,64 do
     local row=8-((i-1)%8)
     local col=math.floor((i-0.01)/8)+1
     -- generate random notework lattice
+    self.rowcol_to_i[row][col]=i
     self.nw[i]={
       id=i,
       armed=false,
@@ -38,15 +46,6 @@ function Network:init()
       row=row,
       col=col,
     }
-  end
-end
-
-function Network:rowcol_to_i(row,col)
-  -- TODO optimize this
-  for i,nw in ipairs(self.nw) do
-    if nw.row==row and nw.col==col then
-      do return i end
-    end
   end
 end
 
@@ -211,6 +210,7 @@ function Network:connections(i)
   return conns
 end
 
+-- to lists all the nodes that come from node
 function Network:to(i)
   local to={}
   for _,v in ipairs(self.conn) do

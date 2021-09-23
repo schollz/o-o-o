@@ -4,7 +4,7 @@ local GGrid={}
 
 function GGrid:new(args)
   local m=setmetatable({},{__index=GGrid})
-  local args=args==nil and {} or args
+  local args=args==nil and {} or args`
 
   m.grid_on=args.grid_on==nil and true or args.grid_on
 
@@ -52,9 +52,27 @@ end
 
 function GGrid:key_press(row,col,on)
   if on then
-    self.pressed_buttons[row..","..col]=true
+    self.pressed_buttons[row..","..col]=clock.get_beats()
   else
     self.pressed_buttons[row..","..col]=nil
+  end
+  -- organize pressed buttons by time
+  local buttons={}
+  for k,v in pairs(self.pressed_buttons) do 
+    local row,col=k:match("(%d+),(%d+)")
+    table.insert(buttons,{v,tonumber(row),tonumber(col)})
+  end
+  -- make a connection between the two pressed buttons
+  if #buttons~=2 then 
+    do return end
+  end
+  table.sort(buttons,function(a,b) return a[1]<b[1] end)
+  local i=networks[global_page].rowcol_to_i[buttons[1][2]][buttons[1][3]]
+  local j=networks[global_page].rowcol_to_i[buttons[2][2]][buttons[2][3]]
+  if not netwworks[global_page]:is_connected_to(i,j) then 
+    networks[global_page]:connect(i,j)
+  else
+    networks[global_page]:disconnect(i,j)
   end
 end
 
@@ -69,10 +87,10 @@ function GGrid:get_visual()
     end
   end
 
-  -- illuminate the melody network
-  for i,nw in ipairs(nw_melody.nw) do 
+  -- illuminate the network
+  for i,nw in ipairs(networks[global_page].nw) do 
     if nw.emitted then 
-        self.visual[nw.row][nw.col]=15
+        self.visual[nw.row][nw.col]=10
     elseif nw.iterated then 
         self.visual[nw.row][nw.col]=5
     else
@@ -85,9 +103,10 @@ function GGrid:get_visual()
   for k,_ in pairs(self.pressed_buttons) do
     local row,col=k:match("(%d+),(%d+)")
     self.visual[tonumber(row)][tonumber(col)]=15
-    -- TODO: illuminate entire web
-    for _, i in ipairs(nw_melody:networked()) do
-        self.visual[nw_melody[i].row][nw_melody[i].col]=15
+    -- illuminate all the connections from the pressed node
+    local i=networks[global_page].rowcol_to_i[row][col]
+    for _, j in ipairs(networks[global_page]:to(i)) do
+        self.visual[networks[global_page].nw[j].row][networks[global_page].nw[j].col]=15
     end
   end
 
