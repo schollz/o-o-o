@@ -45,6 +45,11 @@ patches["lead"]={
   send=-15,
   divs={1/4,1/4,1/8,1/8,1/8,1/16,1/16,1/16},
   dens={0.5,0.75,0.25,0.5,0.75,0.25,0.5,0.75},
+  eq_freq=1200,
+  eq_db=0,
+  noise=0,
+  attack_noise=0.01,
+  attack_decay=1,
 }
 patches["bass"]={
   amp=0.5,
@@ -60,6 +65,11 @@ patches["bass"]={
   send=-20,
   divs={1/2,1/2,1/4,1/4,1/8,1/8,1/16,1/16},
   dens={1,0.6,0.5,0.75,0.5,0.75,0.5,0.75},
+  eq_freq=1200,
+  eq_db=0,
+  noise=0,
+  attack_noise=0.01,
+  attack_decay=1,
 }
 patches["snare"]={
   amp=0.5,
@@ -75,6 +85,31 @@ patches["snare"]={
   send=-12,
   divs={1/2,1/2,1/4,1/4,1/8,1/8,1/16,1/16},
   dens={1,0.6,0.5,0.75,0.5,0.75,0.5,0.75},
+  eq_freq=1200,
+  eq_db=0,
+  noise=0,
+  attack_noise=0.01,
+  attack_decay=1,
+}
+patches["hihat"]={
+  amp=0.5,
+  pan=math.random(-50,50)/100,
+  attack=0,
+  decay=0.1,
+  attack_curve=4,
+  decay_curve=-8,
+  mod_ratio=1.5,
+  car_ratio=45.9,
+  index=100,
+  index_scale=1,
+  send=-12,
+  divs={1/2,1/2,1/4,1/4,1/8,1/8,1/16,1/16},
+  dens={1,0.6,0.5,0.75,0.5,0.75,0.5,0.75},
+  eq_freq=1200,
+  eq_db=0,
+  noise=0.1,
+  attack_noise=0.01,
+  attack_decay=1,
 }
 patches["kick"]={
   hz=25,
@@ -91,6 +126,11 @@ patches["kick"]={
   send=-30,
   divs={1/2,1/2,1/4,1/4,1/8,1/8,1/16,1/16},
   dens={1,0.6,0.5,0.75,0.5,0.75,0.5,0.75},
+  eq_freq=1200,
+  eq_db=0,
+  noise=0,
+  attack_noise=0.01,
+  attack_decay=1,
 }
 patches["pad"]={
   amp=0.5,
@@ -105,7 +145,12 @@ patches["pad"]={
   index_scale=math.random(2,4),
   send=-10,
   divs={1,1/2,1,1/2,1,1/2,1,1/2},
-  dens={1,1,1,1,1,1,1,1}
+  dens={1,1,1,1,1,1,1,1},
+  eq_freq=1200,
+  eq_db=0,
+  noise=0,
+  attack_noise=0.01,
+  attack_decay=1,
 }
 
 function init()
@@ -139,17 +184,24 @@ function init()
     params:add{type="control",id=ins.."car_ratio",name="car ratio",controlspec=controlspec.new(0,50,'lin',0.01,patches[ins].car_ratio,'x',0.01/50)}
     params:add{type="control",id=ins.."index",name="index",controlspec=controlspec.new(0,200,'lin',0.1,patches[ins].index,'',0.1/200)}
     params:add{type="control",id=ins.."index_scale",name="index scale",controlspec=controlspec.new(0,10,'lin',0.1,patches[ins].index_scale,'',0.1/10)}
+    params:add{type="control",id=ins.."noise",name="noise",controlspec=controlspec.new(-96,12,'lin',0.1,patches[ins].noise,'',0.1/(12+96)),formatter=function(v)
+      local val=math.floor(util.linlin(0,1,v.controlspec.minval,v.controlspec.maxval,v.raw)*10)/10
+      return ((val<0) and "" or "+")..val.." dB"
+    end}
+    params:add{type="control",id=ins.."noise_attack",name="noise attack",controlspec=controlspec.new(0,6,'lin',0.01,patches[ins].noise_attack,'s',0.01/6)}
+    params:add{type="control",id=ins.."noise_decay",name="noise decay",controlspec=controlspec.new(0,6,'lin',0.01,patches[ins].noise_decay,'s',0.01/6)}
+    params:add_control(ins.."lpf","lpf",controlspec.WIDEFREQ)
+    params:add_control(ins.."eq_freq","eq freq",controlspec.WIDEFREQ)
+    params:set(ins.."eq_freq",patches[ins].eq_freq)
+    params:add{type="control",id=ins.."eq_db",name="reverb eq_db",controlspec=controlspec.new(-96,36,'lin',0.1,patches[ins].eq_db,'',0.1/(36+96)),formatter=function(v)
+      local val=math.floor(util.linlin(0,1,v.controlspec.minval,v.controlspec.maxval,v.raw)*10)/10
+      return ((val<0) and "" or "+")..val.." dB"
+    end}
     params:add{type="control",id=ins.."reverb",name="reverb send",controlspec=controlspec.new(-96,12,'lin',0.1,patches[ins].send,'',0.1/(12+96)),formatter=function(v)
       local val=math.floor(util.linlin(0,1,v.controlspec.minval,v.controlspec.maxval,v.raw)*10)/10
       return ((val<0) and "" or "+")..val.." dB"
     end}
-    params:add_control(ins.."eq_freq","eq freq",controlspec.WIDEFREQ)
-    params:add{type="control",id=ins.."eq_db",name="reverb eq_db",controlspec=controlspec.new(-96,36,'lin',0.1,patches[ins].send,'',0.1/(36+96)),formatter=function(v)
-      local val=math.floor(util.linlin(0,1,v.controlspec.minval,v.controlspec.maxval,v.raw)*10)/10
-      return ((val<0) and "" or "+")..val.." dB"
-    end}
-    params:add_control(ins.."lpf","lpf",controlspec.WIDEFREQ)
-    -- TODO: add optional midi out and crow out
+    -- add optional midi out and crow out
     params:add_option(ins.."midi_out","midi out",midi_devices)
     params:add{type="control",id=ins.."midi_ch",name="midi out ch",controlspec=controlspec.new(1,16,'lin',1,1,'',1/16)}
   end
@@ -266,6 +318,9 @@ function fm1(a)
   a.eq_freq=a.eq_freq or params:get(a.type.."eq_freq")
   a.eq_db=a.eq_db or params:get(a.type.."eq_db")
   a.lpf=a.lpf or params:get(a.type.."lpf")
+  a.noise=a.noise or util.dbamp(params:get(a.type.."noise"))
+  a.noise_attack=a.noise_attack or params:get(a.type.."noise_attack")
+  a.noise_decay=a.noise_decay or params:get(a.type.."noise_decay")
   tab.print(a)
   engine.fm1(
     a.hz,
@@ -282,7 +337,10 @@ function fm1(a)
     a.send,
     a.eq_freq,
     a.eq_db,
-    a.lpf
+    a.lpf,
+    a.noise,
+    a.noise_attack,
+    a.noise_decay
   )
 
   -- send out midi if activated

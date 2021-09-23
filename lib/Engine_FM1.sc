@@ -21,6 +21,7 @@ Engine_FM1 : CroneEngine {
 			arg freq=500, mRatio=1, cRatio=1,
 			index=1, iScale=5, cAtk=4, cRel=(-4),
 			amp=0.2, atk=0.01, rel=3, pan=0,
+			noise=0.0, natk=0.01, nrel=3,
 			eqFreq=1200,eqDB=0,
 			lpf=20000,
 			out=0, fx=0, fxsend=(-25);
@@ -36,21 +37,29 @@ Engine_FM1 : CroneEngine {
 			);
 			
 			//amplitude envelope
-			env = EnvGen.kr(Env.perc(atk,rel,curve:[cAtk,cRel]),doneAction:2);
+			env = EnvGen.kr(Env.perc(atk,rel,curve:[cAtk,cRel]));
 			
-			//modulator/carrier
+			// modulator/carrier
 			mod = SinOsc.ar(freq * mRatio, mul:freq * mRatio * iEnv);
 			car = SinOsc.ar(freq * cRatio + mod) * env * amp;
 
 			// add some chorus
 			car=DelayC.ar(car, rrand(0.01,0.03), LFNoise1.kr(Rand(5,10),0.01,0.02)/15 );
+
+			// add some noise 
+			car=car+(WhiteNoise.ar(noise)*EnvGen.kr(Env.perc(natk,nrel)));
 			
 			// add some boost
 			car=BPeakEQ.ar(car,eqFreq,0.5,eqDB);
 			
+			// low-pass filter
 			car=LPF.ar(car,lpf);
 
+			// panning
 			car = Pan2.ar(car, pan)/8;
+
+			// kill the sound
+			DetectSilence(car,doneAction:2);
 
 			//direct out/reverb send
 			Out.ar(out, car);
@@ -79,7 +88,7 @@ Engine_FM1 : CroneEngine {
 		fm1Syn=Synth("FM1FX",[\in,fm1Bus],context.server);
 		context.server.sync;
 		
-		this.addCommand("fm1","fffffffffffffff",{ arg msg;
+		this.addCommand("fm1","ffffffffffffffffff",{ arg msg;
 			Synth.before(fm1Syn,"FM1",[
 				\freq,msg[1],
 				\amp,msg[2],
@@ -96,6 +105,9 @@ Engine_FM1 : CroneEngine {
 				\eqFreq,msg[13],
 				\eqDB,msg[14],
 				\lpf,msg[15],
+				\noise,msg[16],
+				\natk,msg[17],
+				\nrel,msg[18],
 				\out,0,
 				\fx,fm1Bus,
 			]);
