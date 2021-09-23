@@ -107,6 +107,7 @@ function fm1(a)
     a.type="lead"
   end
   patches={}
+  -- TODO: add bass https://sccode.org/1-5bA
   patches["lead"]={
     amp=0.5,
     pan=math.random(-50,50)/100,

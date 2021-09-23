@@ -1,4 +1,6 @@
 // Engine_FM1
+// this engine is based entirely off of Eli Fieldsteel's
+// beautifully succinct FM synth: https://sccode.org/1-5bA
 Engine_FM1 : CroneEngine {
 	// <FM1>
 	var fm1Bus;
