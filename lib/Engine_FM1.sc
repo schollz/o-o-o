@@ -21,6 +21,8 @@ Engine_FM1 : CroneEngine {
 			arg freq=500, mRatio=1, cRatio=1,
 			index=1, iScale=5, cAtk=4, cRel=(-4),
 			amp=0.2, atk=0.01, rel=3, pan=0,
+			eqFreq=1200,eqDB=0,
+			lpf=20000,
 			out=0, fx=0, fxsend=(-25);
 			var car, mod, env, iEnv;
 			
@@ -43,6 +45,11 @@ Engine_FM1 : CroneEngine {
 			// add some chorus
 			car=DelayC.ar(car, rrand(0.01,0.03), LFNoise1.kr(Rand(5,10),0.01,0.02)/15 );
 			
+			// add some boost
+			car=BPeakEQ.ar(car,eqFreq,0.5,eqDB);
+			
+			car=LPF.ar(car,lpf);
+
 			car = Pan2.ar(car, pan)/8;
 
 			//direct out/reverb send
@@ -72,7 +79,7 @@ Engine_FM1 : CroneEngine {
 		fm1Syn=Synth("FM1FX",[\in,fm1Bus],context.server);
 		context.server.sync;
 		
-		this.addCommand("fm1","ffffffffffff",{ arg msg;
+		this.addCommand("fm1","fffffffffffffff",{ arg msg;
 			Synth.before(fm1Syn,"FM1",[
 				\freq,msg[1],
 				\amp,msg[2],
@@ -86,6 +93,9 @@ Engine_FM1 : CroneEngine {
 				\index,msg[10],
 				\iScale,msg[11],
 				\fxsend,msg[12],
+				\eqFreq,msg[13],
+				\eqDB,msg[14],
+				\lpf,msg[15],
 				\out,0,
 				\fx,fm1Bus,
 			]);

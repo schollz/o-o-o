@@ -122,7 +122,7 @@ function init()
   -- setup parameters
   instrument_list={"pad","lead","bass","kick","snare"}
   for _,ins in ipairs(instrument_list) do
-    params:add_group(ins,10)
+    params:add_group(ins,13)
     params:add{type="control",id=ins.."db",name="volume",controlspec=controlspec.new(-96,12,'lin',0.1,-6,'',0.1/(12+96)),formatter=function(v)
       local val=math.floor(util.linlin(0,1,v.controlspec.minval,v.controlspec.maxval,v.raw)*10)/10
       return ((val<0) and "" or "+")..val.." dB"
@@ -139,9 +139,14 @@ function init()
       local val=math.floor(util.linlin(0,1,v.controlspec.minval,v.controlspec.maxval,v.raw)*10)/10
       return ((val<0) and "" or "+")..val.." dB"
     end}
+    params:add_control(ins.."eq_freq","eq freq",controlspec.WIDEFREQ)
+    params:add{type="control",id=ins.."eq_db",name="reverb eq_db",controlspec=controlspec.new(-96,36,'lin',0.1,patches[ins].send,'',0.1/(36+96)),formatter=function(v)
+      local val=math.floor(util.linlin(0,1,v.controlspec.minval,v.controlspec.maxval,v.raw)*10)/10
+      return ((val<0) and "" or "+")..val.." dB"
+    end}
+    params:add_control(ins.."lpf","lpf",controlspec.WIDEFREQ)
   end
-  params:add{type="control",id="root_note",name="root note",controlspec=controlspec.new(1,127,'lin',1,60,'',1/127)}
-
+  
   -- setup networks
   local scale_melody=generate_scale(24) -- generate scale starting with C
   local pad_rows={-4,-3,-2,-1,0,1,2,3}
@@ -240,6 +245,9 @@ function fm1(a)
   a.index=a.index or params:get(a.type.."index")
   a.index_scale=a.index_scale or params:get(a.type.."index_scale")
   a.send=a.send or params:get(a.type.."reverb")
+  a.eq_freq=a.eq_freq or params:get(a.type.."eq_freq")
+  a.eq_db=a.eq_db or params:get(a.type.."eq_db")
+  a.lpf=a.lpf or params:get(a.type.."lpf")
   tab.print(a)
   engine.fm1(
     a.hz,
@@ -253,7 +261,10 @@ function fm1(a)
     a.car_ratio,
     a.index,
     a.index_scale,
-    a.send
+    a.send,
+    a.eq_freq,
+    a.eq_db,
+    a.lpf
   )
 end
 
