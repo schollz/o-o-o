@@ -207,6 +207,22 @@ function Network:change_pos(d)
   end
 end
 
+function Network:change_row(d)
+  local pos=self.pos
+  pos=pos+d
+  if math.floor((pos-0.01)/8)==math.floor((self.pos-0.01)/8) then
+    self.pos=pos
+  end
+end
+
+function Network:change_col(d)
+  local pos=self.pos
+  pos=pos+d*8
+  if pos>=1 and pos<=64 then
+    self.pos=pos
+  end
+end
+
 function Network:connect_first()
   self.pos_hold=self.pos
 end

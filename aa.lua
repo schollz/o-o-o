@@ -30,14 +30,24 @@ function init()
   notework_pos=1
   local scale_melody_transpose=0
   local scale_melody=generate_scale(24) -- generate scale starting with C
-  nw_melody=Network:new()
-  nw_melody:set_action(function(nw)
-    scale_melody_transpose=0
-    fm1({amp=nw_melody.amp*nw.amp,note=24+scale_melody[nw.id+scale_melody_transpose],pan=nw.pan,type="lead"})
-    -- if MusicUtil.note_num_to_name(scale_melody[j])~="B" then
-    --   engine.hz(MusicUtil.note_num_to_freq(scale_melody[j]+24))
-    -- end
-  end)
+  networks={}
+  for i,v in ipairs({"kick","bass","lead","snare"}) do
+    local divs=nil
+    if v=="kick" then
+      divs={1,1,1/2,1/2,1/4,1/4,1/8,1/8}
+    end
+    networks[i]=Network:new({divs=divs})
+    networks[i]:set_action(function(nw)
+      scale_melody_transpose=0
+      local note=24+scale_melody[nw.id+scale_melody_transpose]
+      if v=="bass" then
+        note=note-24
+      end
+      fm1({amp=networks[i].amp*nw.amp,note=note,pan=nw.pan,type=v,decay=clock.get_beat_sec()*16*nw.div})
+    end)
+    networks[i]:toggle_play()
+    networks[i].name=v
+  end
 
   nw_chords=Ternary:new()
   nw_chords:set_action(function(notes)
@@ -48,17 +58,6 @@ function init()
     end
   end)
 
-  -- generate some test connections
-  -- nw_melody:connect(1,8)
-  -- nw_melody:connect(1,17)
-  -- nw_melody:connect(1,27)
-  -- nw_melody:connect(1,47)
-
-  -- nw_melody:connect(8,33)
-  -- nw_melody:connect(33,48)
-  -- nw_melody:connect(48,64)
-  tab.print(nw_melody:networked(1))
-
   local lattice=Lattice:new{
     ppqn=96
   }
@@ -67,7 +66,9 @@ function init()
     lattice:new_pattern{
       action=function(t)
         step=step+1
-        nw_melody:emit(step,div)
+        for _,nw in ipairs(networks) do
+          nw:emit(step,div)
+        end
         nw_chords:emit(step,div)
       end,
       division=div,
@@ -76,7 +77,6 @@ function init()
   lattice:start()
 
   -- nw_chords:toggle_play()
-  nw_melody:toggle_play()
 
   -- -- define the chord lists
   -- chord_list={
@@ -120,6 +120,19 @@ function fm1(a)
     index=math.random(200,250)/100,
     iscale=1.2,
     send=-15,
+  }
+  patches["bass"]={
+    amp=0.5,
+    pan=math.random(-25,25)/100,
+    attack=0.0,
+    decay=2,
+    attack_curve=4,
+    decay_curve=-4,
+    ratio=2,
+    ratio_curve=1,
+    index=1.5,
+    iscale=math.random(100,300)/100,
+    send=-20,
   }
   patches["snare"]={
     amp=0.5,
@@ -173,6 +186,7 @@ function fm1(a)
     while a.amp<5 do
       a.amp=a.amp*2
     end
+    a.decay=0.1
   end
   a.amp=a.amp or patches[a.type].amp
   a.pan=a.pan or patches[a.type].pan
@@ -238,12 +252,12 @@ function key(k,z)
   else
     keydown[k]=false
   end
-  if global_page==2 and (not keydown[1]) then
+  if global_page>1 and (not keydown[1]) then
     if z==1 then
-      nw_melody:connect_first()
+      networks[global_page-1]:connect_first()
     else
       if z==0 and k==3 then
-        nw_melody:connect()
+        networks[global_page-1]:connect()
       end
     end
   end
@@ -253,7 +267,7 @@ function key(k,z)
     elseif k==3 then
       -- toggle playing
       if global_page==1 and z==1 then nw_chords:toggle_play() end
-      if global_page==2 and z==1 then nw_melody:toggle_play() end
+      if global_page>1 and z==1 then networks[global_page-1]:toggle_play() end
     end
   else
     if k==1 then
@@ -269,19 +283,19 @@ function enc(k,d)
   if keydown[1] then
     if k==1 then
       if global_page==1 then nw_chords:change_amp(d/100) end
-      if global_page==2 then nw_melody:change_amp(d/100) end
+      if global_page>1 then networks[global_page-1]:change_amp(d/100) end
     elseif k==2 then
     else
     end
   else
     if k==1 then
-      global_page=util.clamp(global_page+sign(d),1,2)
+      global_page=util.clamp(global_page+sign(d),1,1+#networks)
     elseif k==2 then
       if global_page==1 then nw_chords:change_pos(sign(d)) end
-      if global_page==2 then nw_melody:change_pos(d*8) end
+      if global_page>1 then networks[global_page-1]:change_col(d) end
     elseif k==3 then
       if global_page==1 then nw_chords:change_chord(-1*sign(d)) end
-      if global_page==2 then nw_melody:change_pos(d) end
+      if global_page>1 then networks[global_page-1]:change_row(d) end
     end
   end
 end
@@ -290,8 +304,11 @@ function redraw()
   screen.clear()
 
   if global_page==1 then nw_chords:draw() end
-  if global_page==2 then nw_melody:draw() end
+  if global_page>1 then networks[global_page-1]:draw() end
 
+  screen.level(15)
+  screen.move(1,5)
+  screen.text(global_page==1 and "chords" or networks[global_page-1].name)
   screen.update()
 end
 
