@@ -14,16 +14,18 @@ function Network:init()
   self.playing=false
   self.emitted=false
   self.pos=1
+  self.amp=0.5
   self.pos_hold=nil
   self.nw={}
   self.conn={}
   for i=1,64 do
     -- generate random notework lattice
     self.nw[i]={
+      id=i,
       armed=false,
       er=er.random(math.random(8,32)),
       pos=0,
-      pan=math.random(-100,100)/200
+      pan=math.random(-100,100)/200,
       div=global_divisions[math.random(#global_divisions)],
       emitted=false,
       iterated=false,
@@ -35,9 +37,9 @@ end
 
 function Network:rowcol_to_i(row,col)
   -- TODO optimize this
-  for i,nw in ipairs(self.nw) do 
-    if nw.row==row and nw.col==col then 
-      do return i end 
+  for i,nw in ipairs(self.nw) do
+    if nw.row==row and nw.col==col then
+      do return i end
     end
   end
 end
@@ -46,18 +48,23 @@ function Network:set_action(fn)
   self.fn=fn
 end
 
+function Network:change_amp(d)
+  self.amp=util.clamp(self.amp+d,0,1)
+end
+
 function Network:emit(step,div)
-  if not self.playing then
-    do return end
-  end
   for j,nw in ipairs(self.nw) do
     if nw.div==div then
       self.nw[j].pos=(step%#nw.er)+1
+      self.nw[j].iterated=nw.er[self.nw[j].pos]
+      if not self.playing then
+        goto continue
+      end
       -- emit if either...
       -- ...it is connected TO something
       -- ...it is armed
       if nw.er[self.nw[j].pos] then
-        self.nw[j].iterated=true
+
         local to=self:to(j)
         local into=self:into(j)
         -- only play if nothing connnected is armed
@@ -77,7 +84,7 @@ function Network:emit(step,div)
           end)
           -- emit note
           if self.fn~=nil then
-            self.fn(j)
+            self.fn(self.nw[j])
           end
 
           -- arm connected
@@ -93,10 +100,10 @@ function Network:emit(step,div)
           self.nw[j].emitted=false
         end
       else
-        self.nw[j].iterated=false
         self.nw[j].emitted=false
       end
     end
+    ::continue::
   end
 end
 
@@ -266,12 +273,16 @@ function Network:draw()
     end
   end
 
-  screen.level(15)
-  screen.move(1,5)
-  screen.text("e2/e3 move")
-  screen.move(1,12)
-  screen.text("hold k3 to connect")
-
+  if keydown[1] then
+    screen.level(15)
+    screen.move(1,5)
+    screen.text("e2/e3 move")
+    screen.move(1,12)
+    screen.text("hold k3 to connect")
+    screen.level(15)
+    screen.move(110,15)
+    screen.text(self.amp)
+  end
   -- TODO: show if playing
 end
 

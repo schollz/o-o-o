@@ -1,3 +1,9 @@
+function sign(x)
+  if x<0 then
+    return-1
+  end
+  return 1
+end
 
 function distance_points(x1,y1,x2,y2)
   local dx=x1-x2

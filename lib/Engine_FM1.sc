@@ -1,8 +1,8 @@
 // Engine_FM1
 Engine_FM1 : CroneEngine {
 	// <FM1>
-	var FM1BusFx;
-	var FM1ReverbSyn;
+	var fm1Bus;
+	var fm1Syn;
 	// </FM1>
 	
 	
@@ -39,7 +39,7 @@ Engine_FM1 : CroneEngine {
 			car = SinOsc.ar(freq * cRatio + mod) * env * amp;
 			
 			car = Pan2.ar(car, pan);
-			
+
 			//direct out/reverb send
 			Out.ar(out, car);
 			Out.ar(fx, car * fxsend.dbamp);
@@ -62,26 +62,26 @@ Engine_FM1 : CroneEngine {
 		
 		// initialize fx synth and bus
 		context.server.sync;
-		FM1BusFx = Bus.audio(context.server,2);
+		fm1Bus = Bus.audio(context.server,2);
 		context.server.sync;
-		FM1ReverbSyn=Synth("FM1FX",[\in,FM1BusFx],context.server);
+		fm1Syn=Synth("FM1FX",[\in,fm1Bus],context.server);
 		context.server.sync;
 		
-		this.addCommand("fm1_lead","f",{ arg msg;
-			Synth.before(FM1ReverbSyn,"FM1",[
+		this.addCommand("fm1","fffffffffff",{ arg msg;
+			Synth.before(fm1Syn,"FM1",[
 				\freq,msg[1],
-				\amp,msg[1],
-				\pan,msg[1],
-				\cAtk,msg[2],
-				\cRel,msg[3],
-				\mRatio,25,
-				\index,exprand(2,2.5),
-				\iScale,1.2,
-				\atk,exprand(0.02,0.1),
-				\rel,0.03,
+				\amp,msg[2],
+				\pan,msg[3],
+				\atk,msg[4],
+				\rel,msg[5],
+				\cAtk,msg[6],
+				\cRel,msg[7],
+				\mRatio,msg[8],
+				\index,msg[9],
+				\iScale,msg[10],
+				\fxsend,msg[11],
 				\out,0,
-				\fxsend,-15,
-				\fx,FM1ReverbSyn,
+				\fx,fm1Syn,
 			]);
 		});
 		// </FM1>
@@ -90,8 +90,8 @@ Engine_FM1 : CroneEngine {
 	
 	free {
 		// <FM1>
-		FM1BusFx.free;
-		FM1ReverbSyn.free;
+		fm1Bus.free;
+		fm1Syn.free;
 		// </FM1>
 	}
 }
