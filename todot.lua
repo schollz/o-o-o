@@ -74,7 +74,7 @@ patches["bass"]={
   noise_decay=1,
 }
 patches["snare"]={
-  db=-1,
+  db=-2,
   amp=0.5,
   pan=math.random(-50,50)/100,
   attack=0,
@@ -88,15 +88,15 @@ patches["snare"]={
   send=-25,
   divs={1/2,1/2,1/4,1/4,1/8,1/8,1/16,1/16},
   dens={1,0.6,0.5,0.75,0.5,0.75,0.5,0.75},
-  eq_freq=1200,
-  eq_db=17,
-  noise=3,
+  eq_freq=450,
+  eq_db=9,
+  noise=15,
   noise_attack=0.01,
   noise_decay=0.1,
   lpf=2000,
 }
 patches["hihat"]={
-  db=-6,
+  db=-20,
   amp=0.5,
   pan=math.random(-50,50)/100,
   attack=0,
@@ -107,17 +107,17 @@ patches["hihat"]={
   car_ratio=45.9,
   index=100,
   index_scale=1,
-  send=-12,
+  send=-18,
   divs={1/2,1/2,1/4,1/4,1/8,1/8,1/16,1/16},
   dens={1,0.6,0.5,0.75,0.5,0.75,0.5,0.75},
   eq_freq=1200,
   eq_db=0,
-  noise=0.1,
+  noise=11,
   noise_attack=0.01,
   noise_decay=0.11,
 }
 patches["kick"]={
-  db=0,
+  db=12,
   hz=25,
   amp=0.5,
   pan=0,
@@ -128,15 +128,16 @@ patches["kick"]={
   mod_ratio=0.4,
   car_ratio=1,
   index=2,
-  index_scale=8,
-  send=-30,
+  index_scale=4,
+  send=-42,
   divs={1/2,1/2,1/4,1/4,1/8,1/8,1/16,1/16},
   dens={1,0.6,0.5,0.75,0.5,0.75,0.5,0.75},
-  eq_freq=1200,
-  eq_db=0,
-  noise=-96,
+  eq_freq=250,
+  eq_db=7,
+  noise=-25,
   noise_attack=0.01,
-  noise_decay=1,
+  noise_decay=0.6,
+  lpf=140,
 }
 patches["pad"]={
   db=-6,
@@ -336,13 +337,9 @@ function fm1(a)
     a.hz=a.hz or 220
   end
   if a.type=="kick" then
-    while a.hz>30 do
+    while a.hz>50 do
       a.hz=a.hz/2
     end
-    while a.amp<5 do
-      a.amp=a.amp*2
-    end
-    a.decay=0.1
   end
   if a.amp then
     a.amp=a.amp*util.dbamp(params:get(a.type.."db"))

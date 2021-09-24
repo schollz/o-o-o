@@ -41,7 +41,7 @@ Engine_FM1 : CroneEngine {
 			
 			// modulator/carrier
 			mod = SinOsc.ar(freq * mRatio, mul:freq * mRatio * iEnv);
-			car = SinOsc.ar(freq * cRatio + mod) * env * amp;
+			car = SinOsc.ar(freq * cRatio + mod) * env;
 
 			// add some chorus
 			car=DelayC.ar(car, rrand(0.01,0.03), LFNoise1.kr(Rand(5,10),0.01,0.02)/15 );
@@ -58,6 +58,9 @@ Engine_FM1 : CroneEngine {
 			// panning
 			car = Pan2.ar(car, pan)/8;
 
+			// scaling
+			car = car * amp;
+			
 			// kill the sound
 			DetectSilence.ar(car,doneAction:2);
 
