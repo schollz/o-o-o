@@ -117,27 +117,25 @@ patches["hihat"]={
   noise_decay=0.11,
 }
 patches["kick"]={
-  db=12,
-  hz=25,
-  amp=0.5,
+  db=26,
   pan=0,
   attack=0,
   decay=0.1,
   attack_curve=4,
-  decay_curve=-4,
+  decay_curve=-8,
   mod_ratio=0.4,
-  car_ratio=1,
-  index=2,
-  index_scale=4,
+  car_ratio=1.5,
+  index=0.5,
+  index_scale=0.5,
   send=-42,
   divs={1/2,1/2,1/4,1/4,1/8,1/8,1/16,1/16},
   dens={1,0.6,0.5,0.75,0.5,0.75,0.5,0.75},
-  eq_freq=250,
-  eq_db=7,
-  noise=-25,
+  eq_freq=0,
+  eq_db=-90,
+  noise=-7,
   noise_attack=0.01,
   noise_decay=0.6,
-  lpf=140,
+  lpf=280,
 }
 patches["pad"]={
   db=-6,
@@ -214,7 +212,7 @@ function init()
   instrument_list={"lead","pad","bass","kick","snare","hihat"}
   for _,ins in ipairs(instrument_list) do
     params:add_group(ins,19)
-    params:add{type="control",id=ins.."db",name="volume",controlspec=controlspec.new(-96,12,'lin',0.1,patches[ins].db,'',0.1/(12+96)),formatter=function(v)
+    params:add{type="control",id=ins.."db",name="volume",controlspec=controlspec.new(-96,36,'lin',0.1,patches[ins].db,'',0.1/(36+96)),formatter=function(v)
       local val=math.floor(util.linlin(0,1,v.controlspec.minval,v.controlspec.maxval,v.raw)*10)/10
       return ((val<0) and "" or "+")..val.." dB"
     end}
