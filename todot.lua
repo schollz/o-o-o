@@ -117,7 +117,7 @@ patches["hihat"]={
   noise_decay=0.11,
 }
 patches["kick"]={
-  db=26,
+  db=20,
   pan=0,
   attack=0,
   decay=0.1,
@@ -138,7 +138,7 @@ patches["kick"]={
   lpf=280,
 }
 patches["pad"]={
-  db=-6,
+  db=-10,
   amp=0.5,
   pan=0,
   attack=2,
@@ -149,8 +149,8 @@ patches["pad"]={
   car_ratio=1,
   index=1.5,
   index_scale=math.random(2,4),
-  send=-10,
-  divs={1,1,1,1,1,1,1,1},
+  send=-12,
+  divs={2,2,2,2,2,2,2,2},
   dens={1,1,1,1,1,1,1,1},
   eq_freq=1200,
   eq_db=0,
@@ -264,14 +264,26 @@ function init()
         table.insert(notes,notes[2]+pad_cols[nw.col][2])
         for _,note in ipairs(notes) do
           print(scale_melody[note+24])
-          fm1({note=scale_melody[note+24],pan=(note%12)/12-0.5,type=v,decay=clock.get_beat_sec()*2*nw.div,attack=clock.get_beat_sec()*2*nw.div})
+	  local attack=params:get(v.."attack")
+	  local decay=params:get(v.."decay")
+	  local attack2=attack/(attack+decay)
+	  local decay2=decay/(attack+decay)
+	  attack=attack2*clock.get_beat_sec()*4*nw.div
+	  decay=decay2*clock.get_beat_sec()*4*nw.div
+          fm1({note=scale_melody[note+24],pan=(note%12)/12-0.5,type=v,decay=decay,attack=attack})
         end
       else
         local note=24+scale_melody[nw.id]
         if v=="bass" then
-          note=note-24
+          note=note-36
         end
-        fm1({amp=nw.amp,note=note,pan=nw.pan,type=v,decay=clock.get_beat_sec()*16*nw.div})
+	  local attack=params:get(v.."attack")
+	  local decay=params:get(v.."decay")
+	  local attack2=attack/(attack+decay)
+	  local decay2=decay/(attack+decay)
+	  attack=attack2*clock.get_beat_sec()*8*nw.div
+	  decay=decay2*clock.get_beat_sec()*8*nw.div
+        fm1({amp=nw.amp,note=note,pan=nw.pan,type=v,attack=attack,decay=decay})
       end
     end)
     networks[i]:toggle_play()
@@ -290,7 +302,7 @@ function init()
   local lattice=Lattice:new{
     ppqn=96
   }
-  for i,div in ipairs({1/16,1/8,1/4,1/2,1}) do
+  for i,div in ipairs({1/16,1/8,1/4,1/2,1,2}) do
     local step=-1
     lattice:new_pattern{
       action=function(t)
