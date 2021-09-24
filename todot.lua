@@ -24,7 +24,6 @@ local MusicUtil=require("musicutil")
 local Network=include("todot/lib/network")
 -- local Gridd=include("todot/lib/grid_")
 --local Ternary=include("todot/lib/ternary")
--- TODO: add JSON library
 
 engine.name="FM1"
 
@@ -32,7 +31,7 @@ engine.name="FM1"
 patches={}
 -- https://sccode.org/1-5bA
 patches["lead"]={
-  db=0,
+  db=-3,
   amp=0.5,
   pan=math.random(-50,50)/100,
   attack=0.01,
@@ -264,12 +263,12 @@ function init()
         table.insert(notes,notes[2]+pad_cols[nw.col][2])
         for _,note in ipairs(notes) do
           print(scale_melody[note+24])
-	  local attack=params:get(v.."attack")
-	  local decay=params:get(v.."decay")
-	  local attack2=attack/(attack+decay)
-	  local decay2=decay/(attack+decay)
-	  attack=attack2*clock.get_beat_sec()*4*nw.div
-	  decay=decay2*clock.get_beat_sec()*4*nw.div
+          local attack=params:get(v.."attack")
+          local decay=params:get(v.."decay")
+          local attack2=attack/(attack+decay)
+          local decay2=decay/(attack+decay)
+          attack=attack2*clock.get_beat_sec()*4*nw.div
+          decay=decay2*clock.get_beat_sec()*4*nw.div
           fm1({note=scale_melody[note+24],pan=(note%12)/12-0.5,type=v,decay=decay,attack=attack})
         end
       else
@@ -277,12 +276,12 @@ function init()
         if v=="bass" then
           note=note-36
         end
-	  local attack=params:get(v.."attack")
-	  local decay=params:get(v.."decay")
-	  local attack2=attack/(attack+decay)
-	  local decay2=decay/(attack+decay)
-	  attack=attack2*clock.get_beat_sec()*8*nw.div
-	  decay=decay2*clock.get_beat_sec()*8*nw.div
+        local attack=params:get(v.."attack")
+        local decay=params:get(v.."decay")
+        local attack2=attack/(attack+decay)
+        local decay2=decay/(attack+decay)
+        attack=attack2*clock.get_beat_sec()*8*nw.div
+        decay=decay2*clock.get_beat_sec()*8*nw.div
         fm1({amp=nw.amp,note=note,pan=nw.pan,type=v,attack=attack,decay=decay})
       end
     end)

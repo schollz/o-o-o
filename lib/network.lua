@@ -182,10 +182,10 @@ end
 function Network:disconnect(i,j)
   if i==nil then
     -- remove current connections
-    local ind=self:connections(self.pos)
+    print("disconnect from current pos: "..self.pos)
     local conn={}
     for i,v in ipairs(self.conn) do
-      if ind~=i then
+      if v[1]~=self.pos and v[2]~=self.pos then
         table.insert(conn,v)
       end
     end
