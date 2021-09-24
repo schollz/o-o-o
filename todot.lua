@@ -22,7 +22,7 @@ local er=include("todot/lib/er")
 local Lattice=require("lattice")
 local MusicUtil=require("musicutil")
 local Network=include("todot/lib/network")
-local Gridd=include("todot/lib/grid_")
+-- local Gridd=include("todot/lib/grid_")
 --local Ternary=include("todot/lib/ternary")
 -- TODO: add JSON library
 
@@ -32,6 +32,7 @@ engine.name="FM1"
 patches={}
 -- https://sccode.org/1-5bA
 patches["lead"]={
+  db=0,
   amp=0.5,
   pan=math.random(-50,50)/100,
   attack=0.01,
@@ -47,11 +48,12 @@ patches["lead"]={
   dens={0.5,0.75,0.25,0.5,0.75,0.25,0.5,0.75},
   eq_freq=1200,
   eq_db=0,
-  noise=0,
-  attack_noise=0.01,
-  attack_decay=1,
+  noise=-96,
+  noise_attack=0.01,
+  noise_decay=1,
 }
 patches["bass"]={
+  db=0,
   amp=0.5,
   pan=math.random(-25,25)/100,
   attack=0.0,
@@ -67,11 +69,12 @@ patches["bass"]={
   dens={1,0.6,0.5,0.75,0.5,0.75,0.5,0.75},
   eq_freq=1200,
   eq_db=0,
-  noise=0,
-  attack_noise=0.01,
-  attack_decay=1,
+  noise=-96,
+  noise_attack=0.01,
+  noise_decay=1,
 }
 patches["snare"]={
+  db=-1,
   amp=0.5,
   pan=math.random(-50,50)/100,
   attack=0,
@@ -82,16 +85,18 @@ patches["snare"]={
   car_ratio=45.9,
   index=100,
   index_scale=1,
-  send=-12,
+  send=-25,
   divs={1/2,1/2,1/4,1/4,1/8,1/8,1/16,1/16},
   dens={1,0.6,0.5,0.75,0.5,0.75,0.5,0.75},
   eq_freq=1200,
-  eq_db=0,
-  noise=0,
-  attack_noise=0.01,
-  attack_decay=1,
+  eq_db=17,
+  noise=3,
+  noise_attack=0.01,
+  noise_decay=0.1,
+  lpf=2000,
 }
 patches["hihat"]={
+  db=-6,
   amp=0.5,
   pan=math.random(-50,50)/100,
   attack=0,
@@ -108,10 +113,11 @@ patches["hihat"]={
   eq_freq=1200,
   eq_db=0,
   noise=0.1,
-  attack_noise=0.01,
-  attack_decay=1,
+  noise_attack=0.01,
+  noise_decay=0.11,
 }
 patches["kick"]={
+  db=0,
   hz=25,
   amp=0.5,
   pan=0,
@@ -128,11 +134,12 @@ patches["kick"]={
   dens={1,0.6,0.5,0.75,0.5,0.75,0.5,0.75},
   eq_freq=1200,
   eq_db=0,
-  noise=0,
-  attack_noise=0.01,
-  attack_decay=1,
+  noise=-96,
+  noise_attack=0.01,
+  noise_decay=1,
 }
 patches["pad"]={
+  db=-6,
   amp=0.5,
   pan=0,
   attack=2,
@@ -144,13 +151,13 @@ patches["pad"]={
   index=1.5,
   index_scale=math.random(2,4),
   send=-10,
-  divs={1,1/2,1,1/2,1,1/2,1,1/2},
+  divs={1,1,1,1,1,1,1,1},
   dens={1,1,1,1,1,1,1,1},
   eq_freq=1200,
   eq_db=0,
-  noise=0,
-  attack_noise=0.01,
-  attack_decay=1,
+  noise=-96,
+  noise_attack=0.01,
+  noise_decay=1,
 }
 
 function init()
@@ -158,39 +165,39 @@ function init()
   global_div_scales={1/16,1/8,1/4,1/2,1,2,4,8,16}
   global_page=1
 
-  -- setup softcut stereo delay (based on halfsecond)
-  print("starting halfsecond")
-  audio.level_cut(1.0)
-  audio.level_adc_cut(1)
-  audio.level_eng_cut(1)
-  for i=1,2 do
-    softcut.buffer(i,i)
-    softcut.level(i,1.0)
-    softcut.level_slew_time(i,0.25)
-    softcut.level_input_cut(i,i,1.0)
-    softcut.level_input_cut(i,i,1.0)
-    softcut.pan(i,i*2-3)
+  -- -- setup softcut stereo delay (based on halfsecond)
+  -- print("starting halfsecond")
+  -- audio.level_cut(1.0)
+  -- audio.level_adc_cut(1)
+  -- audio.level_eng_cut(1)
+  -- for i=1,2 do
+  --   softcut.buffer(i,i)
+  --   softcut.level(i,1.0)
+  --   softcut.level_slew_time(i,0.25)
+  --   softcut.level_input_cut(i,i,1.0)
+  --   softcut.level_input_cut(i,i,1.0)
+  --   softcut.pan(i,i*2-3)
 
-    softcut.play(i,1)
-    softcut.rate(i,1)
-    softcut.rate_slew_time(i,0.25)
-    softcut.loop_start(i,1)
-    softcut.loop_end(i,1+clock.get_beat_sec())
-    softcut.loop(i,1)
-    softcut.fade_time(i,0.1)
-    softcut.rec(i,1)
-    softcut.rec_level(i,1)
-    softcut.pre_level(i,0.75)
-    softcut.position(i,1)
-    softcut.enable(i,1)
+  --   softcut.play(i,1)
+  --   softcut.rate(i,1)
+  --   softcut.rate_slew_time(i,0.25)
+  --   softcut.loop_start(i,1)
+  --   softcut.loop_end(i,1+clock.get_beat_sec())
+  --   softcut.loop(i,1)
+  --   softcut.fade_time(i,0.1)
+  --   softcut.rec(i,1)
+  --   softcut.rec_level(i,1)
+  --   softcut.pre_level(i,0.75)
+  --   softcut.position(i,1)
+  --   softcut.enable(i,1)
 
-    softcut.filter_dry(i,0.125);
-    softcut.filter_fc(i,1200);
-    softcut.filter_lp(i,0);
-    softcut.filter_bp(i,1.0);
-    softcut.filter_rq(i,2.0);
+  --   softcut.filter_dry(i,0.125);
+  --   softcut.filter_fc(i,1200);
+  --   softcut.filter_lp(i,0);
+  --   softcut.filter_bp(i,1.0);
+  --   softcut.filter_rq(i,2.0);
 
-  end
+  -- end
 
   -- setup midi
   local midi_devices={"none"}
@@ -203,10 +210,10 @@ function init()
   end
 
   -- setup parameters
-  instrument_list={"lead","pad","bass","kick","snare"}
+  instrument_list={"lead","pad","bass","kick","snare","hihat"}
   for _,ins in ipairs(instrument_list) do
-    params:add_group(ins,15)
-    params:add{type="control",id=ins.."db",name="volume",controlspec=controlspec.new(-96,12,'lin',0.1,-6,'',0.1/(12+96)),formatter=function(v)
+    params:add_group(ins,19)
+    params:add{type="control",id=ins.."db",name="volume",controlspec=controlspec.new(-96,12,'lin',0.1,patches[ins].db,'',0.1/(12+96)),formatter=function(v)
       local val=math.floor(util.linlin(0,1,v.controlspec.minval,v.controlspec.maxval,v.raw)*10)/10
       return ((val<0) and "" or "+")..val.." dB"
     end}
@@ -218,16 +225,17 @@ function init()
     params:add{type="control",id=ins.."car_ratio",name="car ratio",controlspec=controlspec.new(0,50,'lin',0.01,patches[ins].car_ratio,'x',0.01/50)}
     params:add{type="control",id=ins.."index",name="index",controlspec=controlspec.new(0,200,'lin',0.1,patches[ins].index,'',0.1/200)}
     params:add{type="control",id=ins.."index_scale",name="index scale",controlspec=controlspec.new(0,10,'lin',0.1,patches[ins].index_scale,'',0.1/10)}
-    params:add{type="control",id=ins.."noise",name="noise",controlspec=controlspec.new(-96,12,'lin',0.1,patches[ins].noise,'',0.1/(12+96)),formatter=function(v)
+    params:add{type="control",id=ins.."noise",name="noise",controlspec=controlspec.new(-96,36,'lin',1,patches[ins].noise,'',1/(36+96)),formatter=function(v)
       local val=math.floor(util.linlin(0,1,v.controlspec.minval,v.controlspec.maxval,v.raw)*10)/10
       return ((val<0) and "" or "+")..val.." dB"
     end}
     params:add{type="control",id=ins.."noise_attack",name="noise attack",controlspec=controlspec.new(0,6,'lin',0.01,patches[ins].noise_attack,'s',0.01/6)}
     params:add{type="control",id=ins.."noise_decay",name="noise decay",controlspec=controlspec.new(0,6,'lin',0.01,patches[ins].noise_decay,'s',0.01/6)}
     params:add_control(ins.."lpf","lpf",controlspec.WIDEFREQ)
+    params:set(ins.."lpf",patches[ins].lpf or 20000)
     params:add_control(ins.."eq_freq","eq freq",controlspec.WIDEFREQ)
     params:set(ins.."eq_freq",patches[ins].eq_freq)
-    params:add{type="control",id=ins.."eq_db",name="reverb eq_db",controlspec=controlspec.new(-96,36,'lin',0.1,patches[ins].eq_db,'',0.1/(36+96)),formatter=function(v)
+    params:add{type="control",id=ins.."eq_db",name="eq boost",controlspec=controlspec.new(-96,36,'lin',0.1,patches[ins].eq_db,'',0.1/(36+96)),formatter=function(v)
       local val=math.floor(util.linlin(0,1,v.controlspec.minval,v.controlspec.maxval,v.raw)*10)/10
       return ((val<0) and "" or "+")..val.." dB"
     end}
@@ -235,7 +243,7 @@ function init()
       local val=math.floor(util.linlin(0,1,v.controlspec.minval,v.controlspec.maxval,v.raw)*10)/10
       return ((val<0) and "" or "+")..val.." dB"
     end}
-    params:add_option(ins.."div_scale","div scale",5)
+    params:add_option(ins.."div_scale","div scale",global_div_scales,5)
     -- add optional midi out and crow out
     params:add_option(ins.."midi_out","midi out",midi_devices)
     params:add{type="control",id=ins.."midi_ch",name="midi out ch",controlspec=controlspec.new(1,16,'lin',1,1,'',1/16)}
@@ -244,18 +252,20 @@ function init()
   -- setup networks
   local scale_melody=generate_scale(24) -- generate scale starting with C
   local pad_rows={-4,-3,-2,-1,0,1,2,3}
-  local pad_cols=[{2,2},{2,2},{2,3},{2,3},{3,2},{3,2},{3,1},{1,3}]
+  local pad_cols={{2,2},{2,2},{2,3},{2,3},{3,2},{3,2},{3,1},{1,3}}
   networks={}
   for i,v in ipairs(instrument_list) do
     networks[i]=Network:new({divs=patches[v].divs,dens=patches[v].dens,id=i})
     networks[i]:set_action(function(nw)
       if v=="pad" then
         -- play three notes
+        print(nw.row,nw.col)
         local notes={pad_rows[nw.row]}
         table.insert(notes,notes[1]+pad_cols[nw.col][1])
         table.insert(notes,notes[2]+pad_cols[nw.col][2])
         for _,note in ipairs(notes) do
-          fm1({note=scale_melody[note+24],pan=(note%12)/12-0.5,type=v,decay=clock.get_beat_sec()*16*nw.div})
+          print(scale_melody[note+24])
+          fm1({note=scale_melody[note+24],pan=(note%12)/12-0.5,type=v,decay=clock.get_beat_sec()*2*nw.div,attack=clock.get_beat_sec()*2*nw.div})
         end
       else
         local note=24+scale_melody[nw.id]
@@ -289,7 +299,6 @@ function init()
         for _,nw in ipairs(networks) do
           nw:emit(step,div)
         end
-        nw_chords:emit(step,div)
       end,
       division=div,
     }
@@ -312,7 +321,7 @@ function init()
   end
 
   -- add grid
-  grid_=gridd:new()
+  -- grid_=Gridd:new()
 end
 
 -- fm1 is a helper function for the engie
@@ -322,7 +331,7 @@ function fm1(a)
   end
 
   if a.note then
-    a.hz=MusicUtil.note_num_to_freq(a.note)/2
+    a.hz=MusicUtil.note_num_to_freq(a.note)
   else
     a.hz=a.hz or 220
   end
@@ -356,7 +365,7 @@ function fm1(a)
   a.noise=a.noise or util.dbamp(params:get(a.type.."noise"))
   a.noise_attack=a.noise_attack or params:get(a.type.."noise_attack")
   a.noise_decay=a.noise_decay or params:get(a.type.."noise_decay")
-  tab.print(a)
+  -- tab.print(a)
   engine.fm1(
     a.hz,
     a.amp,
@@ -379,8 +388,8 @@ function fm1(a)
   )
 
   -- send out midi if activated
-  if params:get(ins.."midi_out")>1 then
-    local conn=midi_conn[params:get(ins.."midi_out")]
+  if params:get(a.type.."midi_out")>1 then
+    local conn=midi_conn[params:get(a.type.."midi_out")]
     conn:note_on(a.note,util.clamp(math.floor(a.amp*127),0,127))
     clock.run(function()
       clock.sleep(a.decay)
@@ -426,15 +435,6 @@ function key(k,z)
   else
     keydown[k]=false
   end
-  if global_page>1 and (not keydown[1]) then
-    if z==1 then
-      networks[global_page-1]:connect_first()
-    else
-      if z==0 and k==3 then
-        networks[global_page-1]:connect()
-      end
-    end
-  end
   if keydown[1] and z==1 then
     if k==1 then
     elseif k==2 then
@@ -442,7 +442,7 @@ function key(k,z)
     elseif k==3 then
       networks[global_page]:toggle_play()
     end
-  elseif z==1
+  elseif z==1 then
     if k==1 then
     elseif k==2 then
       networks[global_page]:connect_cancel()
@@ -461,7 +461,7 @@ function enc(k,d)
     end
   else
     if k==1 then
-      global_page=util.clamp(global_page+sign(d),1,1+#networks)
+      global_page=util.clamp(global_page+sign(d),1,#networks)
     elseif k==2 then
       networks[global_page]:change_col(d)
     elseif k==3 then
@@ -476,7 +476,9 @@ function redraw()
   if not keydown[1] then
     screen.level(15)
     screen.move(1,5)
-    screen.text(networks[global_page].name)
+    if networks[global_page].name~=nil then
+      screen.text(networks[global_page].name)
+    end
   end
 
   networks[global_page]:draw()
@@ -514,5 +516,3 @@ function todot_load(filename)
     networks[i].conn=data[i].conn
   end
 end
-
-

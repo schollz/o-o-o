@@ -1,10 +1,9 @@
 -- local pattern_time = require("pattern")
 local GGrid={}
 
-
 function GGrid:new(args)
   local m=setmetatable({},{__index=GGrid})
-  local args=args==nil and {} or args`
+  local args=args==nil and {} or args
 
   m.grid_on=args.grid_on==nil and true or args.grid_on
 
@@ -15,6 +14,7 @@ function GGrid:new(args)
       m:grid_key(x,y,z)
     end
   end
+
   print("grid columns: "..m.g.cols)
 
   -- setup visual
@@ -26,7 +26,6 @@ function GGrid:new(args)
       m.visual[i][j]=0
     end
   end
-
 
   -- keep track of pressed buttons
   m.pressed_buttons={}
@@ -43,7 +42,6 @@ function GGrid:new(args)
 
   return m
 end
-
 
 function GGrid:grid_key(x,y,z)
   self:key_press(y,x,z==1)
@@ -98,7 +96,6 @@ function GGrid:get_visual()
     end
   end
 
-
   -- illuminate currently pressed button
   for k,_ in pairs(self.pressed_buttons) do
     local row,col=k:match("(%d+),(%d+)")
@@ -112,7 +109,6 @@ function GGrid:get_visual()
 
   return self.visual
 end
-
 
 function GGrid:grid_redraw()
   self.g:all(0)

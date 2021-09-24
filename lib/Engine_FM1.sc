@@ -59,7 +59,7 @@ Engine_FM1 : CroneEngine {
 			car = Pan2.ar(car, pan)/8;
 
 			// kill the sound
-			DetectSilence(car,doneAction:2);
+			DetectSilence.ar(car,doneAction:2);
 
 			//direct out/reverb send
 			Out.ar(out, car);
