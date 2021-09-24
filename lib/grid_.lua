@@ -67,7 +67,7 @@ function GGrid:key_press(row,col,on)
   table.sort(buttons,function(a,b) return a[1]<b[1] end)
   local i=networks[global_page].rowcol_to_i[buttons[1][2]][buttons[1][3]]
   local j=networks[global_page].rowcol_to_i[buttons[2][2]][buttons[2][3]]
-  if not netwworks[global_page]:is_connected_to(i,j) then
+  if not networks[global_page]:is_connected_to(i,j) then
     networks[global_page]:connect(i,j)
   else
     networks[global_page]:disconnect(i,j)
@@ -88,22 +88,34 @@ function GGrid:get_visual()
   -- illuminate the network
   for i,nw in ipairs(networks[global_page].nw) do
     if nw.emitted then
-      self.visual[nw.row][nw.col]=10
+      self.visual[nw.row][nw.col]=3
     elseif nw.iterated then
-      self.visual[nw.row][nw.col]=5
+      self.visual[nw.row][nw.col]=1
     else
       self.visual[nw.row][nw.col]=0
+    end
+  end
+
+  -- illuminate current network
+  local listed={}
+  for _, v in ipairs(networks[global_page].conn) do
+    for i=1,2 do
+      if listed[v[i]]==nil then 
+        listed[v[i]]=true
+        local nw=networks[global_page].nw[v[i]]
+        self.visual[nw.row][nw.col]=self.visual[nw.row][nw.col]+2
+      end
     end
   end
 
   -- illuminate currently pressed button
   for k,_ in pairs(self.pressed_buttons) do
     local row,col=k:match("(%d+),(%d+)")
-    self.visual[tonumber(row)][tonumber(col)]=15
+    self.visual[tonumber(row)][tonumber(col)]=self.visual[tonumber(row)][tonumber(col)]+5
     -- illuminate all the connections from the pressed node
-    local i=networks[global_page].rowcol_to_i[row][col]
+    local i=networks[global_page].rowcol_to_i[tonumber(row)][tonumber(col)]
     for _,j in ipairs(networks[global_page]:to(i)) do
-      self.visual[networks[global_page].nw[j].row][networks[global_page].nw[j].col]=15
+      self.visual[networks[global_page].nw[j].row][networks[global_page].nw[j].col]=self.visual[networks[global_page].nw[j].row][networks[global_page].nw[j].col]+5
     end
   end
 

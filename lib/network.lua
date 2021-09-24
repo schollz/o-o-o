@@ -351,8 +351,8 @@ function Network:draw()
 
   -- show if playing
   screen.level(15)
-  screen.move(125,5)
-  screen.text(self.playing and ">" or "||")
+  screen.move(128,5)
+  screen.text_right(self.playing and ">" or "||")
 end
 
 return Network

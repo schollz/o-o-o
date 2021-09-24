@@ -22,7 +22,7 @@ local er=include("todot/lib/er")
 local Lattice=require("lattice")
 local MusicUtil=require("musicutil")
 local Network=include("todot/lib/network")
--- local Gridd=include("todot/lib/grid_")
+local Gridd=include("todot/lib/grid_")
 --local Ternary=include("todot/lib/ternary")
 
 engine.name="FM1"
@@ -324,7 +324,7 @@ function init()
   end
 
   -- add grid
-  -- grid_=Gridd:new()
+  grid_=Gridd:new()
 end
 
 -- fm1 is a helper function for the engie
@@ -473,12 +473,10 @@ end
 function redraw()
   screen.clear()
 
-  if not keydown[1] then
-    screen.level(15)
-    screen.move(1,5)
-    if networks[global_page].name~=nil then
-      screen.text(networks[global_page].name)
-    end
+  screen.level(15)
+  screen.move(128,64)
+  if networks[global_page].name~=nil then
+    screen.text_right(networks[global_page].name)
   end
 
   networks[global_page]:draw()

@@ -81,7 +81,7 @@ Engine_FM1 : CroneEngine {
 			5.do{sig = AllpassN.ar(sig, 0.1, {Rand(0.01,0.099)}!2, 3)};
 			sig = LPF.ar(sig, lpf);
 			sig = LeakDC.ar(sig);
-			Out.ar(out, sig.poll);
+			Out.ar(out, sig);
 		}).add;
 		
 		// initialize fx synth and bus
