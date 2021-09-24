@@ -3,11 +3,8 @@
 --
 -- llllllll.co/t/todot
 --
+-- hold k1 for hints
 --
---
---    ▼ instructions below ▼
---
--- E1 changes page
 
 -- keep track of which keys are down
 keydown={}
