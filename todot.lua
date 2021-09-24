@@ -43,8 +43,8 @@ patches["lead"]={
   index=math.random(200,250)/100,
   index_scale=1.2,
   send=-15,
-  divs={1/4,1/4,1/8,1/8,1/8,1/16,1/16,1/16},
-  dens={0.5,0.75,0.25,0.5,0.75,0.25,0.5,0.75},
+  divs={1/4,1/4,1/8,1/8,1/8,1/8,1/8,1/16},
+  dens={0.5,0.75,0.15,0.25,0.5,0.25,0.75,0.5},
   eq_freq=1200,
   eq_db=0,
   noise=-96,
@@ -75,7 +75,7 @@ patches["snare"]={
   amp=0.5,
   pan=math.random(-50,50)/100,
   attack=0,
-  decay=0.1,
+  decay=0.5,
   attack_curve=4,
   decay_curve=-8,
   mod_ratio=1.5,
@@ -95,7 +95,6 @@ patches["snare"]={
 patches["hihat"]={
   db=-20,
   amp=0.5,
-  pan=math.random(-50,50)/100,
   attack=0,
   decay=0.1,
   attack_curve=4,
@@ -117,7 +116,7 @@ patches["kick"]={
   db=20,
   pan=0,
   attack=0,
-  decay=0.1,
+  decay=1,
   attack_curve=4,
   decay_curve=-8,
   mod_ratio=0.4,
@@ -265,8 +264,8 @@ function init()
         table.insert(notes,notes[2]+pad_cols[nw.col][2])
         for _,note in ipairs(notes) do
           print(scale_melody[note+24])
-          local attack=params:get(v.."attack")*clock.get_beat_sec()*4*nw.div
-          local decay=params:get(v.."decay")*clock.get_beat_sec()*4*nw.div
+          local attack=params:get(v.."attack")*clock.get_beat_sec()*1*nw.div
+          local decay=params:get(v.."decay")*clock.get_beat_sec()*1*nw.div
           fm1({note=scale_melody[note+24],pan=(note%12)/12-0.5,type=v,decay=decay,attack=attack})
         end
       else
@@ -274,8 +273,8 @@ function init()
         if v=="bass" then
           note=note-36
         end
-          local attack=params:get(v.."attack")*clock.get_beat_sec()*4*nw.div
-          local decay=params:get(v.."decay")*clock.get_beat_sec()*4*nw.div
+        local attack=params:get(v.."attack")*clock.get_beat_sec()*16*nw.div
+        local decay=params:get(v.."decay")*clock.get_beat_sec()*16*nw.div
         fm1({amp=nw.amp,note=note,pan=nw.pan,type=v,attack=attack,decay=decay})
       end
     end)
