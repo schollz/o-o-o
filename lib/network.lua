@@ -147,10 +147,6 @@ function Network:networked(i)
   return r
 end
 
-function Network:connect_cancel()
-  self.pos_hold=nil
-end
-
 function Network:connect(i,j)
   if i==nil and j==nil then
     if self.pos_hold==nil then
@@ -179,8 +175,17 @@ function Network:is_connected_to(i,j)
   end
 end
 
+function Network:clear()
+  self.conn={}
+end
+
 function Network:disconnect(i,j)
   if i==nil then
+    -- cancel
+    if self.pos_hold~=nil then 
+      self.pos_hold=nil 
+      do return end
+    end
     -- remove current connections
     print("disconnect from current pos: "..self.pos)
     local conn={}
@@ -325,7 +330,7 @@ function Network:draw()
 
   if keydown[1] then
     screen.level(15)
-    local help={{"k3","connect"},{"k2","cancel"},{"k1+k2","remove"},{"e2/e3","moves"}}
+    local help={{"k3","link"},{"k2","unlink"},{"e2/e3","move"},{"k1+k2","clear"}}
     local y=7
     for _,h in ipairs(help) do
       screen.move(1,y)
@@ -339,6 +344,9 @@ function Network:draw()
     screen.move(128,15)
     local db=params:get(instrument_list[self.id].."db")
     screen.text_right((db>0 and "+" or "")..db.." dB")
+
+    screen.move(118,5)
+    screen.text_right("k1+k3:")
   end
 
   -- show if playing

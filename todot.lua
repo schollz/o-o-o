@@ -52,22 +52,20 @@ patches["lead"]={
   noise_decay=1,
 }
 patches["bass"]={
-  db=0,
-  amp=0.5,
-  pan=math.random(-25,25)/100,
+  db=6,
   attack=0.0,
-  decay=2,
+  decay=1,
   attack_curve=4,
   decay_curve=-4,
   mod_ratio=2,
-  car_ratio=1,
+  car_ratio=1.02,
   index=1.5,
-  index_scale=math.random(100,300)/100,
+  index_scale=1.2,
   send=-20,
   divs={1/2,1/2,1/4,1/4,1/8,1/8,1/16,1/16},
-  dens={1,0.6,0.5,0.75,0.5,0.75,0.5,0.75},
-  eq_freq=1200,
-  eq_db=0,
+  dens={0.75,0.5,0.5,0.75,0.5,0.75,0.5,0.75},
+  eq_freq=150,
+  eq_db=8,
   noise=-96,
   noise_attack=0.01,
   noise_decay=1,
@@ -86,7 +84,7 @@ patches["snare"]={
   index_scale=1,
   send=-25,
   divs={1/2,1/2,1/4,1/4,1/8,1/8,1/16,1/16},
-  dens={1,0.6,0.5,0.75,0.5,0.75,0.5,0.75},
+  dens={0.8,0.5,0.5,0.75,0.5,0.75,0.5,0.75},
   eq_freq=450,
   eq_db=9,
   noise=15,
@@ -128,7 +126,7 @@ patches["kick"]={
   index_scale=0.5,
   send=-42,
   divs={1/2,1/2,1/4,1/4,1/8,1/8,1/16,1/16},
-  dens={1,0.6,0.5,0.75,0.5,0.75,0.5,0.75},
+  dens={0.75,0.5,0.5,0.75,0.5,0.75,0.5,0.75},
   eq_freq=0,
   eq_db=-90,
   noise=-7,
@@ -144,15 +142,18 @@ patches["pad"]={
   decay=2,
   attack_curve=0,
   decay_curve=0,
-  mod_ratio=1,
+  mod_ratio=2,
   car_ratio=1,
-  index=1.5,
-  index_scale=math.random(2,4),
-  send=-12,
-  divs={2,2,2,2,2,2,2,2},
+  index=1.0,
+  -- mod_ratio=1,
+  -- car_ratio=1,
+  -- index=1.5,
+  index_scale=4,
+  send=-15,
+  divs={2,1,2,1,2,1,2,1},
   dens={1,1,1,1,1,1,1,1},
-  eq_freq=1200,
-  eq_db=0,
+  eq_freq=800,
+  eq_db=10,
   noise=-96,
   noise_attack=0.01,
   noise_decay=1,
@@ -210,16 +211,16 @@ function init()
   -- setup parameters
   instrument_list={"lead","pad","bass","kick","snare","hihat"}
   for _,ins in ipairs(instrument_list) do
-    params:add_group(ins,19)
+    params:add_group(ins,20)
     params:add{type="control",id=ins.."db",name="volume",controlspec=controlspec.new(-96,36,'lin',0.1,patches[ins].db,'',0.1/(36+96)),formatter=function(v)
       local val=math.floor(util.linlin(0,1,v.controlspec.minval,v.controlspec.maxval,v.raw)*10)/10
       return ((val<0) and "" or "+")..val.." dB"
     end}
-    params:add{type="control",id=ins.."attack",name="attack",controlspec=controlspec.new(0,6,'lin',0.01,patches[ins].attack,'s',0.01/6)}
-    params:add{type="control",id=ins.."decay",name="decay",controlspec=controlspec.new(0,6,'lin',0.01,patches[ins].decay,'s',0.01/6)}
+    params:add{type="control",id=ins.."attack",name="attack",controlspec=controlspec.new(0,8,'lin',0.01,patches[ins].attack,'beats',0.01/8)}
+    params:add{type="control",id=ins.."decay",name="decay",controlspec=controlspec.new(0,8,'lin',0.01,patches[ins].decay,'beats',0.01/8)}
     params:add{type="control",id=ins.."attack_curve",name="attack curve",controlspec=controlspec.new(-8,8,'lin',1,patches[ins].attack_curve,'',1/16)}
     params:add{type="control",id=ins.."decay_curve",name="decay curve",controlspec=controlspec.new(-8,8,'lin',1,patches[ins].decay_curve,'',1/16)}
-    params:add{type="control",id=ins.."mod_ratio",name="mod ratio",controlspec=controlspec.new(0,2,'lin',0.01,patches[ins].mod_ratio,'x',0.01/2)}
+    params:add{type="control",id=ins.."mod_ratio",name="mod ratio",controlspec=controlspec.new(0,8,'lin',0.01,patches[ins].mod_ratio,'x',0.01/8)}
     params:add{type="control",id=ins.."car_ratio",name="car ratio",controlspec=controlspec.new(0,50,'lin',0.01,patches[ins].car_ratio,'x',0.01/50)}
     params:add{type="control",id=ins.."index",name="index",controlspec=controlspec.new(0,200,'lin',0.1,patches[ins].index,'',0.1/200)}
     params:add{type="control",id=ins.."index_scale",name="index scale",controlspec=controlspec.new(0,10,'lin',0.1,patches[ins].index_scale,'',0.1/10)}
@@ -227,8 +228,8 @@ function init()
       local val=math.floor(util.linlin(0,1,v.controlspec.minval,v.controlspec.maxval,v.raw)*10)/10
       return ((val<0) and "" or "+")..val.." dB"
     end}
-    params:add{type="control",id=ins.."noise_attack",name="noise attack",controlspec=controlspec.new(0,6,'lin',0.01,patches[ins].noise_attack,'s',0.01/6)}
-    params:add{type="control",id=ins.."noise_decay",name="noise decay",controlspec=controlspec.new(0,6,'lin',0.01,patches[ins].noise_decay,'s',0.01/6)}
+    params:add{type="control",id=ins.."noise_attack",name="noise attack",controlspec=controlspec.new(0,6,'lin',0.01,patches[ins].noise_attack,'beats',0.01/6)}
+    params:add{type="control",id=ins.."noise_decay",name="noise decay",controlspec=controlspec.new(0,6,'lin',0.01,patches[ins].noise_decay,'beats',0.01/6)}
     params:add_control(ins.."lpf","lpf",controlspec.WIDEFREQ)
     params:set(ins.."lpf",patches[ins].lpf or 20000)
     params:add_control(ins.."eq_freq","eq freq",controlspec.WIDEFREQ)
@@ -242,6 +243,7 @@ function init()
       return ((val<0) and "" or "+")..val.." dB"
     end}
     params:add_option(ins.."div_scale","div scale",global_div_scales,5)
+    params:add_option(ins.."freq_scale","freq scale",global_div_scales,5)
     -- add optional midi out and crow out
     params:add_option(ins.."midi_out","midi out",midi_devices)
     params:add{type="control",id=ins.."midi_ch",name="midi out ch",controlspec=controlspec.new(1,16,'lin',1,1,'',1/16)}
@@ -263,12 +265,8 @@ function init()
         table.insert(notes,notes[2]+pad_cols[nw.col][2])
         for _,note in ipairs(notes) do
           print(scale_melody[note+24])
-          local attack=params:get(v.."attack")
-          local decay=params:get(v.."decay")
-          local attack2=attack/(attack+decay)
-          local decay2=decay/(attack+decay)
-          attack=attack2*clock.get_beat_sec()*4*nw.div
-          decay=decay2*clock.get_beat_sec()*4*nw.div
+          local attack=params:get(v.."attack")*clock.get_beat_sec()*4*nw.div
+          local decay=params:get(v.."decay")*clock.get_beat_sec()*4*nw.div
           fm1({note=scale_melody[note+24],pan=(note%12)/12-0.5,type=v,decay=decay,attack=attack})
         end
       else
@@ -276,12 +274,8 @@ function init()
         if v=="bass" then
           note=note-36
         end
-        local attack=params:get(v.."attack")
-        local decay=params:get(v.."decay")
-        local attack2=attack/(attack+decay)
-        local decay2=decay/(attack+decay)
-        attack=attack2*clock.get_beat_sec()*8*nw.div
-        decay=decay2*clock.get_beat_sec()*8*nw.div
+          local attack=params:get(v.."attack")*clock.get_beat_sec()*4*nw.div
+          local decay=params:get(v.."decay")*clock.get_beat_sec()*4*nw.div
         fm1({amp=nw.amp,note=note,pan=nw.pan,type=v,attack=attack,decay=decay})
       end
     end)
@@ -350,6 +344,7 @@ function fm1(a)
       a.hz=a.hz/2
     end
   end
+  a.hz=a.hz*global_div_scales[params:get(a.type.."freq_scale")]
   if a.amp then
     a.amp=a.amp*util.dbamp(params:get(a.type.."db"))
   else
@@ -444,14 +439,14 @@ function key(k,z)
   if keydown[1] and z==1 then
     if k==1 then
     elseif k==2 then
-      networks[global_page]:disconnect()
+      networks[global_page]:clear()
     elseif k==3 then
       networks[global_page]:toggle_play()
     end
   elseif z==1 then
     if k==1 then
     elseif k==2 then
-      networks[global_page]:connect_cancel()
+      networks[global_page]:disconnect()
     elseif k==3 then
       networks[global_page]:connect()
     end
