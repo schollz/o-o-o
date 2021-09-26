@@ -1,11 +1,11 @@
-// Engine_FM1
+// Engine_Odashodasho
 // this engine is based entirely off of Eli Fieldsteel's
 // beautifully succinct FM synth: https://sccode.org/1-5bA
-Engine_FM1 : CroneEngine {
-	// <FM1>
+Engine_Odashodasho : CroneEngine {
+	// <Odashodasho>
 	var fm1Bus;
 	var fm1Syn;
-	// </FM1>
+	// </Odashodasho>
 	
 	
 	*new { arg context, doneCallback;
@@ -14,10 +14,10 @@ Engine_FM1 : CroneEngine {
 	
 	alloc {
 		
-		// <FM1>
+		// <Odashodasho>
 		
 		// initialize synth defs
-		SynthDef("FM1", {
+		SynthDef("Odashodasho", {
 			arg freq=500, mRatio=1, cRatio=1,
 			index=1, iScale=5, cAtk=4, cRel=(-4),
 			amp=0.2, atk=0.01, rel=3, pan=0,
@@ -70,7 +70,7 @@ Engine_FM1 : CroneEngine {
 		}).add;
 		
 		//reverb
-		SynthDef("FM1FX", {
+		SynthDef("OdashodashoFX", {
 			arg in=0, out=0, dec=4, lpf=1500;
 			var sig;
 			sig = In.ar(in, 2).sum;
@@ -88,11 +88,11 @@ Engine_FM1 : CroneEngine {
 		context.server.sync;
 		fm1Bus = Bus.audio(context.server,2);
 		context.server.sync;
-		fm1Syn=Synth("FM1FX",[\in,fm1Bus],context.server);
+		fm1Syn=Synth("OdashodashoFX",[\in,fm1Bus],context.server);
 		context.server.sync;
 		
 		this.addCommand("fm1","ffffffffffffffffff",{ arg msg;
-			Synth.before(fm1Syn,"FM1",[
+			Synth.before(fm1Syn,"Odashodasho",[
 				\freq,msg[1],
 				\amp,msg[2],
 				\pan,msg[3],
@@ -115,15 +115,15 @@ Engine_FM1 : CroneEngine {
 				\fx,fm1Bus,
 			]);
 		});
-		// </FM1>
+		// </Odashodasho>
 	}
 	
 	
 	free {
-		// <FM1>
+		// <Odashodasho>
 		fm1Bus.free;
 		fm1Syn.free;
-		// </FM1>
+		// </Odashodasho>
 	}
 }
 

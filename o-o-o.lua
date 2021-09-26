@@ -22,7 +22,7 @@ local Network=include("o-o-o/lib/network")
 local Gridd=include("o-o-o/lib/grid_")
 --local Ternary=include("o-o-o/lib/ternary")
 
-engine.name="FM1"
+engine.name="Odashodasho"
 
 -- define patches
 patches={}
