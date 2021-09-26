@@ -28,7 +28,7 @@ engine.name="Odashodasho"
 patches={}
 -- https://sccode.org/1-5bA
 patches["lead"]={
-  db=0,
+  db=-2,
   amp=0.5,
   pan=math.random(-50,50)/100,
   attack=0.01,
@@ -244,11 +244,22 @@ function init()
     params:add_option(ins.."midi_out","midi out",midi_devices)
     params:add{type="control",id=ins.."midi_ch",name="midi out ch",controlspec=controlspec.new(1,16,'lin',1,1,'',1/16)}
   end
+  local scale_names={}
+  for i=1,#MusicUtil.SCALES do
+    table.insert(scale_names,string.lower(MusicUtil.SCALES[i].name))
+  end
+  params:add{type="option",id="scale_mode",name="scale mode",
+    options=scale_names,default=5,
+  action=function() scale_melody=generate_scale() end}
+  params:add{type="number",id="root_note",name="root note",
+    min=0,max=127,default=48,formatter=function(param) return MusicUtil.note_num_to_name(param:get(),true) end,
+  action=function() scale_melody=generate_scale() end}
+
   -- TODO: add parameter for root note
   -- TODO: add paramter for scale
 
   -- setup networks
-  local scale_melody=generate_scale(24) -- generate scale starting with C
+  scale_melody=generate_scale() -- generate scale starting with C
   local pad_rows={-4,-3,-2,-1,0,1,2,3}
   local pad_cols={{2,2},{2,2},{2,3},{2,3},{3,2},{3,2},{3,1},{1,3}}
   networks={}
@@ -257,12 +268,10 @@ function init()
     networks[i]:set_action(function(nw)
       if v=="pad" then
         -- play three notes
-        print(nw.row,nw.col)
         local notes={pad_rows[nw.row]}
         table.insert(notes,notes[1]+pad_cols[nw.col][1])
         table.insert(notes,notes[2]+pad_cols[nw.col][2])
         for _,note in ipairs(notes) do
-          print(scale_melody[note+24])
           local attack=params:get(v.."attack")*clock.get_beat_sec()*1*nw.div
           local decay=params:get(v.."decay")*clock.get_beat_sec()*1*nw.div
           fm1({note=scale_melody[note+24],pan=(note%12)/12-0.5,type=v,decay=decay,attack=attack})
@@ -397,10 +406,10 @@ function fm1(a)
   end
 end
 
-function generate_scale(root)
+function generate_scale()
   local note_list={}
   for i=1,8 do
-    for _,note in ipairs(MusicUtil.generate_scale_of_length(root+24,5,8)) do
+    for _,note in ipairs(MusicUtil.generate_scale_of_length(params:get("root_note"),params:get("scale_mode"),8)) do
       table.insert(note_list,note)
     end
     -- root=note_list[#note_list-3] -- plonky type keyboard
@@ -488,7 +497,7 @@ function rerun()
 end
 
 function odasho_save(filename)
-	filename=filename..".json"
+  filename=filename..".json"
   print("o-o-o: saving "..filename)
   local data={}
   for i,nw in ipairs(networks) do
@@ -503,7 +512,7 @@ function odasho_save(filename)
 end
 
 function odasho_load(filename)
-	filename=filename..".json"
+  filename=filename..".json"
   print("o-o-o: loading "..filename)
   local f=io.open(filename,"rb")
   local content=f:read("*all")
