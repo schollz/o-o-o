@@ -68,7 +68,7 @@ patches["bass"]={
   noise_decay=1,
 }
 patches["snare"]={
-  db=-2,
+  db=-6,
   amp=0.5,
   pan=math.random(-50,50)/100,
   attack=0,
@@ -146,7 +146,7 @@ patches["pad"]={
   -- index=1.5,
   index_scale=4,
   send=-15,
-  divs={2,1,2,1,2,1,2,1},
+  divs={2,2,2,2,1,1,1,1},
   dens={1,1,1,1,1,1,1,1},
   eq_freq=800,
   eq_db=10,
@@ -204,6 +204,17 @@ function init()
     end
   end
 
+  params:add_separator("o-o-o")
+  local scale_names={}
+  for i=1,#MusicUtil.SCALES do
+    table.insert(scale_names,string.lower(MusicUtil.SCALES[i].name))
+  end
+  params:add{type="option",id="scale_mode",name="scale mode",
+    options=scale_names,default=5,
+  action=function() scale_melody=generate_scale() end}
+  params:add{type="number",id="root_note",name="root note",
+    min=0,max=127,default=48,formatter=function(param) return MusicUtil.note_num_to_name(param:get(),true) end,
+  action=function() scale_melody=generate_scale() end}
   -- setup parameters
   instrument_list={"lead","pad","bass","kick","snare","hihat"}
   for _,ins in ipairs(instrument_list) do
@@ -244,24 +255,12 @@ function init()
     params:add_option(ins.."midi_out","midi out",midi_devices)
     params:add{type="control",id=ins.."midi_ch",name="midi out ch",controlspec=controlspec.new(1,16,'lin',1,1,'',1/16)}
   end
-  local scale_names={}
-  for i=1,#MusicUtil.SCALES do
-    table.insert(scale_names,string.lower(MusicUtil.SCALES[i].name))
-  end
-  params:add{type="option",id="scale_mode",name="scale mode",
-    options=scale_names,default=5,
-  action=function() scale_melody=generate_scale() end}
-  params:add{type="number",id="root_note",name="root note",
-    min=0,max=127,default=48,formatter=function(param) return MusicUtil.note_num_to_name(param:get(),true) end,
-  action=function() scale_melody=generate_scale() end}
-
-  -- TODO: add parameter for root note
-  -- TODO: add paramter for scale
 
   -- setup networks
   scale_melody=generate_scale() -- generate scale starting with C
   local pad_rows={-4,-3,-2,-1,0,1,2,3}
-  local pad_cols={{2,2},{2,2},{2,3},{2,3},{3,2},{3,2},{3,1},{1,3}}
+  -- local pad_cols={{2,2},{2,2},{2,3},{2,3},{3,2},{3,2},{3,1},{1,3}}
+  local pad_cols={{2,2},{2,3},{3,2},{3,1},{2,2},{2,3},{3,2},{1,3}}
   networks={}
   for i,v in ipairs(instrument_list) do
     networks[i]=Network:new({divs=patches[v].divs,dens=patches[v].dens,id=i})
