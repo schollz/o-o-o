@@ -60,6 +60,7 @@ function Network:change_amp(d)
 end
 
 function Network:emit(step,div)
+  local to_emit={}
   for j,nw in ipairs(self.nw) do
     if nw.div*util.clamp(global_div_scales[params:get(instrument_list[self.id].."div_scale")],1/16,1)==div then
       self.nw[j].pos=(step%#nw.er)+1
@@ -71,7 +72,6 @@ function Network:emit(step,div)
       -- ...it is connected TO something
       -- ...it is armed
       if nw.er[self.nw[j].pos] then
-
         local to=self:to(j)
         local into=self:into(j)
         -- only play if nothing connnected is armed
@@ -82,27 +82,8 @@ function Network:emit(step,div)
             none_armed=false
           end
         end
-        if ((none_armed and #into==0 and #to>0) or nw.armed) and (not self.emitted) then
-          self.nw[j].emitted=true
-          self.emitted=true
-          clock.run(function()
-            clock.sleep(clock.get_beat_sec()/16)
-            self.emitted=false
-          end)
-          -- emit note
-          if self.fn~=nil then
-            self.fn(self.nw[j])
-          end
-
-          -- arm connected
-          for _,j2 in ipairs(to) do
-            if not self.nw[j2].armed then
-              self.nw[j2].armed=true
-            end
-          end
-
-          -- disarm current
-          self.nw[j].armed=false
+        if ((none_armed and #into==0 and #to>0) or nw.armed) then
+          table.insert(to_emit,j)
         else
           self.nw[j].emitted=false
         end
@@ -111,6 +92,32 @@ function Network:emit(step,div)
       end
     end
     ::continue::
+  end
+  if #to_emit>0 then
+    -- select one randomly to emit
+    local j=to_emit[math.random(1,#to_emit)]
+    for _,i in ipairs(to_emit) do
+      if i==j then
+        self.nw[j].emitted=true
+
+        -- emit note
+        if self.fn~=nil then
+          self.fn(self.nw[j])
+        end
+
+        -- arm connected
+        for _,j2 in ipairs(to) do
+          if not self.nw[j2].armed then
+            self.nw[j2].armed=true
+          end
+        end
+
+        -- disarm current
+        self.nw[j].armed=false
+      else
+        self.nw[j].emitted=false
+      end
+    end
   end
 end
 
