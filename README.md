@@ -34,4 +34,8 @@ this script wouldn't exist without  Eli Fieldsteel's [FM tutorials](https://gith
 
 install with
 
+```
 ;install https://github.com/schollz/o-o-o
+```
+
+https://github.com/schollz/o-o-o
