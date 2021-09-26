@@ -199,7 +199,7 @@ function init()
 
   -- setup midi
   local midi_devices={"none"}
-  midi_conn={} -- needs to be global
+  midi_conn={"none"} -- needs to be global
   for _,dev in pairs(midi.devices) do
     if dev.port~=nil then
       table.insert(midi_devices,dev.name)
@@ -219,7 +219,7 @@ function init()
     table.insert(scale_names,string.lower(MusicUtil.SCALES[i].name))
   end
   params:add{type="option",id="scale_mode",name="scale mode",
-    options=scale_names,default=5,
+    options=scale_names,default=1,
   action=function() scale_melody=generate_scale() end}
   params:add{type="number",id="root_note",name="root note",
     min=0,max=127,default=60,formatter=function(param) return MusicUtil.note_num_to_name(param:get(),true) end,
@@ -269,21 +269,23 @@ function init()
 
   -- setup networks
   scale_melody=generate_scale() -- generate scale starting with C
-  local pad_rows={-4,-3,-2,-1,0,1,2,3}
   -- local pad_cols={{2,2},{2,2},{2,3},{2,3},{3,2},{3,2},{3,1},{1,3}}
   local pad_cols={{2,2},{2,3},{3,2},{3,1},{2,2},{2,3},{3,2},{1,3}}
   for i,v in ipairs(instrument_list) do
     networks[i]=Network:new({divs=patches[v].divs,dens=patches[v].dens,id=i})
     networks[i]:set_action(function(nw)
       if v=="pad" then
+        local scale=MusicUtil.generate_scale_of_length(params:get("root_note"),params:get("scale_mode"),16)
         -- play three notes
-        local notes={pad_rows[nw.row]}
+        local notes={9-nw.row}
         table.insert(notes,notes[1]+pad_cols[nw.col][1])
         table.insert(notes,notes[2]+pad_cols[nw.col][2])
         for _,note in ipairs(notes) do
+          note=scale[note]
+          print(note)
           local attack=params:get(v.."attack")*clock.get_beat_sec()*1*nw.div
           local decay=params:get(v.."decay")*clock.get_beat_sec()*1*nw.div
-          fm1({note=scale_melody[note],pan=(note%12)/12-0.5,type=v,decay=decay,attack=attack})
+          fm1({note=note,pan=(note%12)/12-0.5,type=v,decay=decay,attack=attack})
         end
       else
         local note=scale_melody[nw.id]
@@ -339,6 +341,22 @@ function init()
 
   -- add grid
   grid_=Gridd:new()
+
+  -- add osc
+  osc.event=function(path,args,from)
+    if path=="voice" then
+      local dat={}
+      for i in string.gmatch(args[1],"%S+") do
+        table.insert(dat,i)
+      end
+      local type=dat[1]
+      local note=tonumber(dat[2])
+      if params:get(type.."midi_out")>1 then
+        local conn=midi_conn[params:get(type.."midi_out")]
+        conn:note_off(note)
+      end
+    end
+  end
 end
 
 -- fm1 is a helper function for the engie
@@ -347,17 +365,13 @@ function fm1(a)
     a.type="lead"
   end
 
-  if a.note then
-    a.hz=MusicUtil.note_num_to_freq(a.note)
-  else
-    a.hz=a.hz or 220
-  end
   if a.type=="kick" then
-    while a.hz>50 do
-      a.hz=a.hz/2
+    while a.note>31 do
+      a.note=a.note-12
     end
   end
-  a.hz=a.hz*global_div_scales[params:get(a.type.."freq_scale")]
+
+  a.note=a.note+(12*(global_div_scales[params:get(a.type.."freq_scale")]-1))
   if a.amp then
     a.amp=a.amp*util.dbamp(params:get(a.type.."db"))
   else
@@ -381,7 +395,7 @@ function fm1(a)
   a.noise_decay=a.noise_decay or params:get(a.type.."noise_decay")
   -- tab.print(a)
   engine.fm1(
-    a.hz,
+    a.note,
     a.amp,
     a.pan,
     a.attack,
@@ -398,17 +412,14 @@ function fm1(a)
     a.lpf,
     a.noise,
     a.noise_attack,
-    a.noise_decay
+    a.noise_decay,
+    a.type
   )
 
   -- send out midi if activated
   if params:get(a.type.."midi_out")>1 then
     local conn=midi_conn[params:get(a.type.."midi_out")]
     conn:note_on(a.note,util.clamp(math.floor(a.amp*127),0,127))
-    clock.run(function()
-      clock.sleep(a.decay)
-      conn:note_off(a.note)
-    end)
   end
 end
 

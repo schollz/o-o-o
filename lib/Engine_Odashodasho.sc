@@ -5,6 +5,7 @@ Engine_Odashodasho : CroneEngine {
 	// <Odashodasho>
 	var fm1Bus;
 	var fm1Syn;
+	var fm1Voices;
 	// </Odashodasho>
 	
 	
@@ -15,6 +16,7 @@ Engine_Odashodasho : CroneEngine {
 	alloc {
 		
 		// <Odashodasho>
+		fm1Voices=Dictionary.new;
 		
 		// initialize synth defs
 		SynthDef("Odashodasho", {
@@ -92,9 +94,9 @@ Engine_Odashodasho : CroneEngine {
 		fm1Syn=Synth("OdashodashoFX",[\in,fm1Bus],context.server);
 		context.server.sync;
 		
-		this.addCommand("fm1","ffffffffffffffffff",{ arg msg;
+		this.addCommand("fm1","ifffffffffffffffffs",{ arg msg;
 			Synth.before(fm1Syn,"Odashodasho",[
-				\freq,msg[1],
+				\freq,msg[1].midicps,
 				\amp,msg[2],
 				\pan,msg[3],
 				\atk,msg[4],
@@ -114,7 +116,11 @@ Engine_Odashodasho : CroneEngine {
 				\nrel,msg[18],
 				\out,0,
 				\fx,fm1Bus,
-			]);
+			]).onFree({
+				NetAddr("127.0.0.1",10111)
+					.sendMsg("voice",msg[19]++" "++msg[1],0);
+			})
+			// NodeWatcher.register(fm1Voices.at(fullname));
 		});
 		// </Odashodasho>
 	}
@@ -124,6 +130,7 @@ Engine_Odashodasho : CroneEngine {
 		// <Odashodasho>
 		fm1Bus.free;
 		fm1Syn.free;
+		fm1Voices.keysValuesDo({ arg key, value; value.free; });
 		// </Odashodasho>
 	}
 }
