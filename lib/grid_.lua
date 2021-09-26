@@ -55,6 +55,9 @@ function GGrid:key_press(row,col,on)
     self.pressed_buttons[row..","..col]=nil
   end
   if col>8 then
+    if not on then
+      do return end
+    end
     if col==9 and row==8 then
       global_page=util.clamp(global_page-1,1,#networks)
     elseif col==10 and row==8 then

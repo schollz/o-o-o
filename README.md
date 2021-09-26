@@ -4,6 +4,8 @@ o-o-o (pronounced *oh-dasho-dasho*) is a fm-based synthesizer and a sequencer th
 
 ![img](https://user-images.githubusercontent.com/6550035/134816974-100cdd1e-31bb-42b8-a931-e6fd6934cc0f.gif)
 
+https://vimeo.com/615483324
+
 ## Requirements
 
 - norns
