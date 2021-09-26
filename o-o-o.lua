@@ -66,7 +66,7 @@ patches["bass"]={
   noise=-96,
   noise_attack=0.01,
   noise_decay=1,
-  freq_scale=3,
+  root_note=60-24,
 }
 patches["snare"]={
   db=-6,
@@ -154,7 +154,7 @@ patches["pad"]={
   noise=-96,
   noise_attack=0.01,
   noise_decay=1,
-  freq_scale=4,
+  root_note=60-12,
 }
 
 function init()
@@ -218,16 +218,16 @@ function init()
   for i=1,#MusicUtil.SCALES do
     table.insert(scale_names,string.lower(MusicUtil.SCALES[i].name))
   end
-  params:add{type="option",id="scale_mode",name="scale mode",
-    options=scale_names,default=1,
-  action=function() scale_melody=generate_scale() end}
-  params:add{type="number",id="root_note",name="root note",
-    min=0,max=127,default=60,formatter=function(param) return MusicUtil.note_num_to_name(param:get(),true) end,
-  action=function() scale_melody=generate_scale() end}
   -- setup parameters
   instrument_list={"lead","pad","bass","kick","snare","hihat"}
   for _,ins in ipairs(instrument_list) do
-    params:add_group(ins,20)
+    params:add_group(ins,21)
+    params:add{type="option",id=ins.."scale_mode",name="scale mode",
+      options=scale_names,default=5,
+    action=function() generate_scale() end}
+    params:add{type="number",id=ins.."root_note",name="root note",
+      min=0,max=127,default=patches[ins].root_note or 60,formatter=function(param) return MusicUtil.note_num_to_name(param:get(),true) end,
+    action=function() generate_scale() end}
     params:add{type="control",id=ins.."db",name="volume",controlspec=controlspec.new(-96,36,'lin',0.1,patches[ins].db,'',0.1/(36+96)),formatter=function(v)
       local val=math.floor(util.linlin(0,1,v.controlspec.minval,v.controlspec.maxval,v.raw)*10)/10
       return ((val<0) and "" or "+")..val.." dB"
@@ -260,35 +260,32 @@ function init()
     end}
     params:add_option(ins.."div_scale","div scale",global_div_scales,5)
     params:set(ins.."div_scale",patches[ins].div_scale or 5)
-    params:add_option(ins.."freq_scale","freq scale",global_div_scales,5)
-    params:set(ins.."freq_scale",patches[ins].freq_scale or 5)
     -- add optional midi out and crow out
     params:add_option(ins.."midi_out","midi out",midi_devices)
     params:add{type="control",id=ins.."midi_ch",name="midi out ch",controlspec=controlspec.new(1,16,'lin',1,1,'',1/16)}
   end
 
   -- setup networks
-  scale_melody=generate_scale() -- generate scale starting with C
   -- local pad_cols={{2,2},{2,2},{2,3},{2,3},{3,2},{3,2},{3,1},{1,3}}
+  generate_scale()
   local pad_cols={{2,2},{2,3},{3,2},{3,1},{2,2},{2,3},{3,2},{1,3}}
   for i,v in ipairs(instrument_list) do
     networks[i]=Network:new({divs=patches[v].divs,dens=patches[v].dens,id=i})
     networks[i]:set_action(function(nw)
       if v=="pad" then
-        local scale=MusicUtil.generate_scale_of_length(params:get("root_note"),params:get("scale_mode"),16)
         -- play three notes
         local notes={9-nw.row}
         table.insert(notes,notes[1]+pad_cols[nw.col][1])
         table.insert(notes,notes[2]+pad_cols[nw.col][2])
         for _,note in ipairs(notes) do
-          note=scale[note]
+          note=global_scales[v][note]
           print(note)
           local attack=params:get(v.."attack")*clock.get_beat_sec()*1*nw.div
           local decay=params:get(v.."decay")*clock.get_beat_sec()*1*nw.div
           fm1({note=note,pan=(note%12)/12-0.5,type=v,decay=decay,attack=attack})
         end
       else
-        local note=scale_melody[nw.id]
+        local note=global_scales[v][nw.id]
         local attack=params:get(v.."attack")*clock.get_beat_sec()*16*nw.div
         local decay=params:get(v.."decay")*clock.get_beat_sec()*16*nw.div
         fm1({amp=nw.amp,note=note,pan=nw.pan,type=v,attack=attack,decay=decay})
@@ -371,7 +368,6 @@ function fm1(a)
     end
   end
 
-  a.note=a.note+(12*(global_div_scales[params:get(a.type.."freq_scale")]-1))
   if a.amp then
     a.amp=a.amp*util.dbamp(params:get(a.type.."db"))
   else
@@ -424,14 +420,19 @@ function fm1(a)
 end
 
 function generate_scale()
-  local note_list={}
-  for i=1,8 do
-    for _,note in ipairs(MusicUtil.generate_scale_of_length(params:get("root_note"),params:get("scale_mode"),8)) do
-      table.insert(note_list,note)
+  global_scales={}
+  for _,ins in ipairs(instrument_list) do
+    local scale={}
+    for i=1,8 do
+      for _,note in ipairs(MusicUtil.generate_scale_of_length(params:get(ins.."root_note"),params:get(ins.."scale_mode"),8)) do
+        table.insert(scale,note)
+      end
+      -- root=note_list[#note_list-3] -- plonky type keyboard
+      -- root=root+12
     end
-    -- root=note_list[#note_list-3] -- plonky type keyboard
-    -- root=root+12
+    global_scales[ins]=scale
   end
+  global_scales["pad"]=MusicUtil.generate_scale_of_length(params:get("padroot_note"),params:get("padscale_mode"),24)
   -- for i=1,4 do
   --   for _,note in ipairs(MusicUtil.generate_scale_of_length(root,5,8)) do
   --     table.insert(note_list,note)
