@@ -107,6 +107,7 @@ function Network:emit(step,div)
         end
 
         -- arm connected
+        local to=self:to(j)
         for _,j2 in ipairs(to) do
           if not self.nw[j2].armed then
             self.nw[j2].armed=true
@@ -334,9 +335,9 @@ function Network:draw()
     end
     screen.line_width(1)
     if nw.emitted then
-      screen.level(4)
+      screen.level(15)
       screen.circle(x,y,2)
-      screen.stroke()
+      screen.fill()
     end
     if self.pos==i then
       screen.level(15)

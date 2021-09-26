@@ -1,12 +1,13 @@
---  o  o /o  o  o  o  o\ o
---  o  o| o  o  o  o_ o \o
---  o /o| o  o /o  o \o /o
---  o/ o| o  o/ o  o  o/ o
---  o  o-\o--o  o  o  o  o
---  o  o  o  o\ o  o /o\ o
---  o  o  o  o \o  o/ o |o
---  o  o--o--o--o  o  o/ o
+-- o-o-o v0.0.1
+-- 
+-- connect the dots.
+--
+--
+--
+--
 --    ▼ instructions below ▼
+--
+-- hold K1 for help
 -- E1 changes instrument
 -- E2/E3 changes position
 -- K3 adds connection
@@ -282,7 +283,6 @@ function init()
         table.insert(notes,notes[2]+pad_cols[nw.col][2])
         for _,note in ipairs(notes) do
           note=global_scales[v][note]
-          print(note)
           local attack=params:get(v.."attack")*clock.get_beat_sec()*1*nw.div
           local decay=params:get(v.."decay")*clock.get_beat_sec()*1*nw.div
           fm1({note=note,pan=(note%12)/12-0.5,type=v,decay=decay,attack=attack})
