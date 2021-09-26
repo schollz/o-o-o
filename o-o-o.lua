@@ -1,7 +1,7 @@
--- todot v0.0.1
+-- o-o-o v0.0.1
 -- connect the dots.
 --
--- llllllll.co/t/todot
+-- llllllll.co/t/o-o-o
 --
 -- hold k1 for hints
 --
@@ -10,17 +10,17 @@
 keydown={}
 
 -- import main libraries
-if not string.find(package.cpath,"/home/we/dust/code/todot/lib/") then
-  package.cpath=package.cpath..";/home/we/dust/code/todot/lib/?.so"
+if not string.find(package.cpath,"/home/we/dust/code/o-o-o/lib/") then
+  package.cpath=package.cpath..";/home/we/dust/code/o-o-o/lib/?.so"
 end
 json=require("cjson")
-include("todot/lib/utils")
-local er=include("todot/lib/er")
+include("o-o-o/lib/utils")
+local er=include("o-o-o/lib/er")
 local Lattice=require("lattice")
 local MusicUtil=require("musicutil")
-local Network=include("todot/lib/network")
-local Gridd=include("todot/lib/grid_")
---local Ternary=include("todot/lib/ternary")
+local Network=include("o-o-o/lib/network")
+local Gridd=include("o-o-o/lib/grid_")
+--local Ternary=include("o-o-o/lib/ternary")
 
 engine.name="FM1"
 
@@ -314,7 +314,7 @@ function init()
 
   -- add saving/loading handlers
   params.action_write=function(filename,name)
-    todot_save(filename)
+    odasho_save(filename)
   end
   params.action_read=function(filename,silent)
     todo_load(filename)
@@ -485,8 +485,8 @@ function rerun()
   norns.script.load(norns.state.script)
 end
 
-function todot_save(filename)
-  print("todot: saving "..filename)
+function odasho_save(filename)
+  print("o-o-o: saving "..filename)
   local data={}
   for i,nw in ipairs(networks) do
     data[i]={}
@@ -499,8 +499,8 @@ function todot_save(filename)
   io.close(file)
 end
 
-function todot_load(filename)
-  print("todot: loading "..filename)
+function odasho_load(filename)
+  print("o-o-o: loading "..filename)
   local f=io.open(filename,"rb")
   local content=f:read("*all")
   f:close()

@@ -1,8 +1,8 @@
-# todot
+# o-o-o
 
 connect the dots.
 
-todot is a synthesizer and a sequencer. it is seqeunced by connecting dots. 
+o-o-o is a synthesizer and a sequencer. it is seqeunced by connecting dots. 
 
 more complicated explaination: each dot has an underlying rhythm that creates syncopated hits. dots are connected by [directed edges](https://en.wikipedia.org/wiki/Directed_graph). each time a dot triggers, it will emit a sound on if it has no incoming edges and has at least one outgoing edge.
 

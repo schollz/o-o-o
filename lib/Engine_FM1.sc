@@ -56,10 +56,10 @@ Engine_FM1 : CroneEngine {
 			car=LPF.ar(car,lpf);
 
 			// panning
-			car = Pan2.ar(car, pan)/8;
+			car = Pan2.ar(car, pan);
 
 			// scaling
-			car = car * amp;
+			car = car * amp / 10;
 			
 			// kill the sound
 			DetectSilence.ar(car,doneAction:2);

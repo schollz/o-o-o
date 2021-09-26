@@ -1,5 +1,5 @@
 format: lua-format.py
-	python3 lua-format.py todot.lua
+	python3 lua-format.py o-o-o.lua
 	python3 lua-format.py lib/utils.lua
 	python3 lua-format.py lib/network.lua
 	python3 lua-format.py lib/er.lua
