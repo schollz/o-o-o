@@ -96,6 +96,7 @@ function Network:emit(step,div)
   if #to_emit>0 then
     -- select one randomly to emit
     local j=to_emit[math.random(1,#to_emit)]
+    -- emit the ones to emit
     for _,i in ipairs(to_emit) do
       if i==j then
         self.nw[j].emitted=true

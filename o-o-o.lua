@@ -1,10 +1,18 @@
--- o-o-o v0.0.1
--- connect the dots.
---
--- llllllll.co/t/o-o-o
---
--- hold k1 for hints
---
+--  o  o /o  o  o  o  o\ o
+--  o  o| o  o  o  o_ o \o
+--  o /o| o  o /o  o \o /o
+--  o/ o| o  o/ o  o  o/ o
+--  o  o-\o--o  o  o  o  o
+--  o  o  o  o\ o  o /o\ o
+--  o  o  o  o \o  o/ o |o
+--  o  o--o--o--o  o  o/ o
+--    ▼ instructions below ▼
+-- E1 changes instrument
+-- E2/E3 changes position
+-- K3 adds connection
+-- K2 cancels connection
+-- K1+K3 pauses instrument
+-- K1+K2 removes all connections
 
 -- keep track of which keys are down
 keydown={}
@@ -20,7 +28,6 @@ local Lattice=require("lattice")
 local MusicUtil=require("musicutil")
 local Network=include("o-o-o/lib/network")
 local Gridd=include("o-o-o/lib/grid_")
---local Ternary=include("o-o-o/lib/ternary")
 
 engine.name="Odashodasho"
 
@@ -29,7 +36,6 @@ patches={}
 -- https://sccode.org/1-5bA
 patches["lead"]={
   db=-2,
-  amp=0.5,
   pan=math.random(-50,50)/100,
   attack=0.01,
   decay=2,
@@ -70,7 +76,6 @@ patches["bass"]={
 }
 patches["snare"]={
   db=-6,
-  amp=0.5,
   pan=math.random(-50,50)/100,
   attack=0,
   decay=0.5,
@@ -92,7 +97,6 @@ patches["snare"]={
 }
 patches["hihat"]={
   db=-20,
-  amp=0.5,
   attack=0,
   decay=0.1,
   attack_curve=4,
@@ -133,7 +137,6 @@ patches["kick"]={
 }
 patches["pad"]={
   db=-10,
-  amp=0.5,
   pan=0,
   attack=2,
   decay=2,
@@ -294,15 +297,6 @@ function init()
     networks[i]:toggle_play()
     networks[i].name=v
   end
-
-  -- nw_chords=Ternary:new()
-  -- nw_chords:set_action(function(notes)
-  --   for _,note in ipairs(notes) do
-  --     print(note)
-  --     print("Ternary note: "..scale_melody[note+24])
-  --     fm1({pan=note%8/8-0.5,note=12+scale_melody[note+24],type="pad",attack=clock.get_beat_sec()*4,decay=clock.get_beat_sec()/8})
-  --   end
-  -- end)
 
   local lattice=Lattice:new{
     ppqn=96
