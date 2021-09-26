@@ -1,8 +1,7 @@
 # o-o-o
 
-connect the dots.
 
-o-o-o (*oh-dasho-dasho*) is a fm-based synthesizer and a sequencer. 
+o-o-o (pronounced *oh-dasho-dasho*) is a fm-based synthesizer and a sequencer that is played by connecting dots.
 
 
 ## Requirements
