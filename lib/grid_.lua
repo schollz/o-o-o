@@ -54,6 +54,15 @@ function GGrid:key_press(row,col,on)
   else
     self.pressed_buttons[row..","..col]=nil
   end
+  if col>8 then
+    if col==9 and row==8 then
+      global_page=util.clamp(global_page-1,1,#networks)
+    elseif col==10 and row==8 then
+      global_page=util.clamp(global_page+1,1,#networks)
+    end
+    do return end
+  end
+
   -- organize pressed buttons by time
   local buttons={}
   for k,v in pairs(self.pressed_buttons) do
@@ -118,6 +127,10 @@ function GGrid:get_visual()
       self.visual[networks[global_page].nw[j].row][networks[global_page].nw[j].col]=self.visual[networks[global_page].nw[j].row][networks[global_page].nw[j].col]+5
     end
   end
+
+  -- illuminate page buttons
+  self.visual[8][9]=10
+  self.visual[8][10]=10
 
   return self.visual
 end
