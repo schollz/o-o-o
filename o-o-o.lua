@@ -244,6 +244,8 @@ function init()
     params:add_option(ins.."midi_out","midi out",midi_devices)
     params:add{type="control",id=ins.."midi_ch",name="midi out ch",controlspec=controlspec.new(1,16,'lin',1,1,'',1/16)}
   end
+  -- TODO: add parameter for root note
+  -- TODO: add paramter for scale
 
   -- setup networks
   local scale_melody=generate_scale(24) -- generate scale starting with C
