@@ -317,7 +317,7 @@ function init()
     odasho_save(filename)
   end
   params.action_read=function(filename,silent)
-    todo_load(filename)
+    odasho_load(filename)
   end
 
   -- add grid
@@ -486,6 +486,7 @@ function rerun()
 end
 
 function odasho_save(filename)
+	filename=filename..".json"
   print("o-o-o: saving "..filename)
   local data={}
   for i,nw in ipairs(networks) do
@@ -495,11 +496,12 @@ function odasho_save(filename)
   end
   file=io.open(filename,"w+")
   io.output(file)
-  io.write(data)
+  io.write(json.encode(data))
   io.close(file)
 end
 
 function odasho_load(filename)
+	filename=filename..".json"
   print("o-o-o: loading "..filename)
   local f=io.open(filename,"rb")
   local content=f:read("*all")
