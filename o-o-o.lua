@@ -66,6 +66,7 @@ patches["bass"]={
   noise=-96,
   noise_attack=0.01,
   noise_decay=1,
+  freq_scale=3,
 }
 patches["snare"]={
   db=-6,
@@ -153,12 +154,14 @@ patches["pad"]={
   noise=-96,
   noise_attack=0.01,
   noise_decay=1,
+  freq_scale=4,
 }
 
 function init()
   -- available divisions
   global_div_scales={1/16,1/8,1/4,1/2,1,2,4,8,16}
   global_page=1
+  networks={}
 
   -- -- setup softcut stereo delay (based on halfsecond)
   -- print("starting halfsecond")
@@ -205,6 +208,12 @@ function init()
   end
 
   params:add_separator("o-o-o")
+  -- TODO: add seed
+  params:add{type="control",id="seed",name="seed",controlspec=controlspec.new(0,1000,'lin',1,42,'',1/1000),action=function(x)
+    for _,nw in ipairs(networks) do
+      nw:init_dots()
+    end
+  end}
   local scale_names={}
   for i=1,#MusicUtil.SCALES do
     table.insert(scale_names,string.lower(MusicUtil.SCALES[i].name))
@@ -213,7 +222,7 @@ function init()
     options=scale_names,default=5,
   action=function() scale_melody=generate_scale() end}
   params:add{type="number",id="root_note",name="root note",
-    min=0,max=127,default=48,formatter=function(param) return MusicUtil.note_num_to_name(param:get(),true) end,
+    min=0,max=127,default=60,formatter=function(param) return MusicUtil.note_num_to_name(param:get(),true) end,
   action=function() scale_melody=generate_scale() end}
   -- setup parameters
   instrument_list={"lead","pad","bass","kick","snare","hihat"}
@@ -250,7 +259,9 @@ function init()
       return ((val<0) and "" or "+")..val.." dB"
     end}
     params:add_option(ins.."div_scale","div scale",global_div_scales,5)
+    params:set(ins.."div_scale",patches[ins].div_scale or 5)
     params:add_option(ins.."freq_scale","freq scale",global_div_scales,5)
+    params:set(ins.."freq_scale",patches[ins].freq_scale or 5)
     -- add optional midi out and crow out
     params:add_option(ins.."midi_out","midi out",midi_devices)
     params:add{type="control",id=ins.."midi_ch",name="midi out ch",controlspec=controlspec.new(1,16,'lin',1,1,'',1/16)}
@@ -261,7 +272,6 @@ function init()
   local pad_rows={-4,-3,-2,-1,0,1,2,3}
   -- local pad_cols={{2,2},{2,2},{2,3},{2,3},{3,2},{3,2},{3,1},{1,3}}
   local pad_cols={{2,2},{2,3},{3,2},{3,1},{2,2},{2,3},{3,2},{1,3}}
-  networks={}
   for i,v in ipairs(instrument_list) do
     networks[i]=Network:new({divs=patches[v].divs,dens=patches[v].dens,id=i})
     networks[i]:set_action(function(nw)
@@ -273,13 +283,10 @@ function init()
         for _,note in ipairs(notes) do
           local attack=params:get(v.."attack")*clock.get_beat_sec()*1*nw.div
           local decay=params:get(v.."decay")*clock.get_beat_sec()*1*nw.div
-          fm1({note=scale_melody[note+24],pan=(note%12)/12-0.5,type=v,decay=decay,attack=attack})
+          fm1({note=scale_melody[note],pan=(note%12)/12-0.5,type=v,decay=decay,attack=attack})
         end
       else
-        local note=24+scale_melody[nw.id]
-        if v=="bass" then
-          note=note-36
-        end
+        local note=scale_melody[nw.id]
         local attack=params:get(v.."attack")*clock.get_beat_sec()*16*nw.div
         local decay=params:get(v.."decay")*clock.get_beat_sec()*16*nw.div
         fm1({amp=nw.amp,note=note,pan=nw.pan,type=v,attack=attack,decay=decay})

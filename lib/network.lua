@@ -4,29 +4,15 @@ function Network:new(o)
   o=o or {}
   setmetatable(o,self)
   self.__index=self
-  o.seed=o.seed or 42
   o:init()
   return o
 end
 
-function Network:init()
-  math.randomseed(self.seed)
-  self.playing=false
-  self.emitted=false
-  self.pos=1
-  self.amp=0.5
-  self.pos_hold=nil
-  self.nw={}
-  self.conn={}
+function Network:init_dots()
+  math.randomseed(params:get("seed"))
   local divs=self.divs or {1/4,1/4,1/8,1/8,1/8,1/16,1/16,1/16}
   local dens=self.dens or {0.5,0.75,0.25,0.5,0.75,0.25,0.5,0.75}
-  self.rowcol_to_i={}
-  for i=1,8 do
-    self.rowcol_to_i[i]={}
-    for j=1,8 do
-      self.rowcol_to_i[i][j]=1
-    end
-  end
+  self.nw={}
   for i=1,64 do
     local row=8-((i-1)%8)
     local col=math.floor((i-0.01)/8)+1
@@ -47,6 +33,22 @@ function Network:init()
       col=col,
     }
   end
+end
+function Network:init()
+  self.playing=false
+  self.emitted=false
+  self.pos=1
+  self.amp=0.5
+  self.pos_hold=nil
+  self.conn={}
+  self.rowcol_to_i={}
+  for i=1,8 do
+    self.rowcol_to_i[i]={}
+    for j=1,8 do
+      self.rowcol_to_i[i][j]=1
+    end
+  end
+  self:init_dots()
 end
 
 function Network:set_action(fn)
