@@ -471,7 +471,7 @@ function redraw()
   screen.clear()
 
   screen.level(15)
-  screen.move(128,64)
+  screen.move(128,60)
   if networks[global_page].name~=nil then
     screen.text_right(networks[global_page].name)
   end

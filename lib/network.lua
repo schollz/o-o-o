@@ -182,8 +182,8 @@ end
 function Network:disconnect(i,j)
   if i==nil then
     -- cancel
-    if self.pos_hold~=nil then 
-      self.pos_hold=nil 
+    if self.pos_hold~=nil then
+      self.pos_hold=nil
       do return end
     end
     -- remove current connections
@@ -289,10 +289,13 @@ function Network:draw()
   -- using bezier curves
   -- where curving UP connects left to right
   -- and curving DOWN connects right to left
+  local connected={}
   for i,nw in ipairs(self.nw) do
     local to=self:to(i)
     if to then
       for _,j in ipairs(to) do
+        connected[i]=true
+        connected[j]=true
         self:draw_connection(i,j)
       end
     end
@@ -313,8 +316,12 @@ function Network:draw()
 
     -- draw a different sized dot
     screen.level(nw.iterated and 3 or 1)
-    screen.circle(x,y,2)
-    screen.fill()
+    screen.circle(x,y,1.5)
+    screen.stroke()
+    if connected[i] then
+      screen.circle(x,y,1.5)
+      screen.fill()
+    end
     screen.line_width(1)
     if nw.emitted then
       screen.level(4)

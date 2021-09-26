@@ -98,9 +98,9 @@ function GGrid:get_visual()
 
   -- illuminate current network
   local listed={}
-  for _, v in ipairs(networks[global_page].conn) do
+  for _,v in ipairs(networks[global_page].conn) do
     for i=1,2 do
-      if listed[v[i]]==nil then 
+      if listed[v[i]]==nil then
         listed[v[i]]=true
         local nw=networks[global_page].nw[v[i]]
         self.visual[nw.row][nw.col]=self.visual[nw.row][nw.col]+2
