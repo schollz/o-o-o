@@ -29,6 +29,10 @@ local Lattice=require("lattice")
 local MusicUtil=require("musicutil")
 local Network=include("o-o-o/lib/network")
 local Gridd=include("o-o-o/lib/grid_")
+local mxsamples=nil
+if util.file_exists(_path.code.."mx.samples") then
+  mxsamples=include("mx.samples/lib/mx.samples")
+end
 
 engine.name="Odashodasho"
 
@@ -167,6 +171,15 @@ function init()
   global_page=1
   networks={}
 
+  -- initiate mx samples
+  if mxsamples~=nil then
+    mx=mxsamples:new()
+    mx_instrument_list=mx:list_instruments()
+  else
+    mx=nil
+    mx_instrument_list={}
+  end
+
   -- -- setup softcut stereo delay (based on halfsecond)
   -- print("starting halfsecond")
   -- audio.level_cut(1.0)
@@ -212,20 +225,28 @@ function init()
   end
 
   params:add_separator("o-o-o")
-  -- TODO: add seed
+  -- add seed
   params:add{type="control",id="seed",name="seed",controlspec=controlspec.new(0,1000,'lin',1,42,'',1/1000),action=function(x)
     for _,nw in ipairs(networks) do
       nw:init_dots()
     end
   end}
+  engine_list={"Odashodasho"}
+  if #mx_instrument_list>0 then
+    table.insert(engines,"MxSamples")
+  end
+  params:add_option("engine_name","engine",engines,1)
   local scale_names={}
   for i=1,#MusicUtil.SCALES do
     table.insert(scale_names,string.lower(MusicUtil.SCALES[i].name))
   end
   -- setup parameters
+  parameter_list={}
+  parameter_list["Odashodasho"]={"attack_curve","decay_curve","index","index_scale","noise","noise_attack","noise_decay","eq_freq","eq_db"}
+  parameter_list["MxSamples"]={"sample"}
   instrument_list={"lead","pad","bass","kick","snare","hihat"}
   for _,ins in ipairs(instrument_list) do
-    params:add_group(ins,21)
+    params:add_group(ins,22)
     params:add{type="option",id=ins.."scale_mode",name="scale mode",
       options=scale_names,default=5,
     action=function() generate_scale() end}
@@ -236,6 +257,8 @@ function init()
       local val=math.floor(util.linlin(0,1,v.controlspec.minval,v.controlspec.maxval,v.raw)*10)/10
       return ((val<0) and "" or "+")..val.." dB"
     end}
+    params:add{type="option",id=ins.."sample",name="sample",
+    options=mx_instrument_list,default=1}
     params:add{type="control",id=ins.."attack",name="attack",controlspec=controlspec.new(0,8,'lin',0.01,patches[ins].attack,'beats',0.01/8)}
     params:add{type="control",id=ins.."decay",name="decay",controlspec=controlspec.new(0,8,'lin',0.01,patches[ins].decay,'beats',0.01/8)}
     params:add{type="control",id=ins.."attack_curve",name="attack curve",controlspec=controlspec.new(-8,8,'lin',1,patches[ins].attack_curve,'',1/16)}
@@ -285,13 +308,13 @@ function init()
           note=global_scales[v][note]
           local attack=params:get(v.."attack")*clock.get_beat_sec()*1*nw.div
           local decay=params:get(v.."decay")*clock.get_beat_sec()*1*nw.div
-          fm1({note=note,pan=(note%12)/12-0.5,type=v,decay=decay,attack=attack})
+          play_note({note=note,pan=(note%12)/12-0.5,type=v,decay=decay,attack=attack})
         end
       else
         local note=global_scales[v][nw.id]
         local attack=params:get(v.."attack")*clock.get_beat_sec()*16*nw.div
         local decay=params:get(v.."decay")*clock.get_beat_sec()*16*nw.div
-        fm1({amp=nw.amp,note=note,pan=nw.pan,type=v,attack=attack,decay=decay})
+        play_note({amp=nw.amp,note=note,pan=nw.pan,type=v,attack=attack,decay=decay})
       end
     end)
     networks[i]:toggle_play()
@@ -350,8 +373,22 @@ function init()
   end
 end
 
--- fm1 is a helper function for the engie
-function fm1(a)
+function update_engine()
+  -- TODO: update the parameter menu
+  local name=engine_list[params:get("engine_name")]
+  engine.load(name,function()
+    engine_loaded=true
+    print("loaded "..name)
+    -- write this engine as last used for next default on startup
+    f=io.open(_path.data.."plonky/engine","w")
+    f:write(params:get("mandoengine"))
+    f:close()
+  end)
+  engine.name=name
+end
+
+-- play_note is a helper function for the engines
+function play_note(a)
   if a.type==nil then
     a.type="lead"
   end
