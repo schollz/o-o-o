@@ -34,8 +34,6 @@ if util.file_exists(_path.code.."mx.samples") then
   mxsamples=include("mx.samples/lib/mx.samples")
 end
 
-engine.name="Odashodasho"
-
 -- define patches
 patches={}
 -- https://sccode.org/1-5bA
@@ -166,6 +164,9 @@ patches["pad"]={
 }
 
 function init()
+  engine.name="Odashodasho"
+  engine_loaded="Odashodasho"
+
   -- available divisions
   global_div_scales={1/16,1/8,1/4,1/2,1,2,4,8,16}
   global_page=1
@@ -233,16 +234,19 @@ function init()
   end}
   engine_list={"Odashodasho"}
   if #mx_instrument_list>0 then
-    table.insert(engines,"MxSamples")
+    table.insert(engine_list,"MxSamples")
   end
-  params:add_option("engine_name","engine",engines,1)
+  params:add_option("engine_name","engine",engine_list,1)
+  params:set_action("engine_name",function(x)
+    update_engine()
+  end)
   local scale_names={}
   for i=1,#MusicUtil.SCALES do
     table.insert(scale_names,string.lower(MusicUtil.SCALES[i].name))
   end
   -- setup parameters
   parameter_list={}
-  parameter_list["Odashodasho"]={"attack_curve","decay_curve","index","index_scale","noise","noise_attack","noise_decay","eq_freq","eq_db"}
+  parameter_list["Odashodasho"]={"attack_curve","decay_curve","mod_ratio","car_ratio","index","index_scale","noise","noise_attack","noise_decay","eq_freq","eq_db"}
   parameter_list["MxSamples"]={"sample"}
   instrument_list={"lead","pad","bass","kick","snare","hihat"}
   for _,ins in ipairs(instrument_list) do
@@ -257,8 +261,7 @@ function init()
       local val=math.floor(util.linlin(0,1,v.controlspec.minval,v.controlspec.maxval,v.raw)*10)/10
       return ((val<0) and "" or "+")..val.." dB"
     end}
-    params:add{type="option",id=ins.."sample",name="sample",
-    options=mx_instrument_list,default=1}
+    params:add{type="option",id=ins.."sample",name="sample",options=mx_instrument_list,default=1}
     params:add{type="control",id=ins.."attack",name="attack",controlspec=controlspec.new(0,8,'lin',0.01,patches[ins].attack,'beats',0.01/8)}
     params:add{type="control",id=ins.."decay",name="decay",controlspec=controlspec.new(0,8,'lin',0.01,patches[ins].decay,'beats',0.01/8)}
     params:add{type="control",id=ins.."attack_curve",name="attack curve",controlspec=controlspec.new(-8,8,'lin',1,patches[ins].attack_curve,'',1/16)}
@@ -371,24 +374,44 @@ function init()
       end
     end
   end
+
+  -- update parameters menu
+  update_engine()
 end
 
 function update_engine()
   -- TODO: update the parameter menu
   local name=engine_list[params:get("engine_name")]
-  engine.load(name,function()
-    engine_loaded=true
-    print("loaded "..name)
-    -- write this engine as last used for next default on startup
-    f=io.open(_path.data.."plonky/engine","w")
-    f:write(params:get("mandoengine"))
-    f:close()
-  end)
-  engine.name=name
+  if engine_loaded~=name then
+    engine.load(name,function()
+      print("loaded "..name)
+      engine_loaded=name
+      -- write this engine as last used for next default on startup
+      f=io.open(_path.data.."o-o-o/engine","w")
+      f:write(params:get("engine_name"))
+      f:close()
+    end)
+    engine.name=name
+  end
+  -- update parameter menu
+  for ename,pnames in pairs(parameter_list) do
+    for _,pname in ipairs(pnames) do
+      for _,ins in ipairs(instrument_list) do
+        if ename==name then
+          params:show(ins..pname)
+        else
+          params:hide(ins..pname)
+        end
+      end
+    end
+  end
 end
 
 -- play_note is a helper function for the engines
 function play_note(a)
+  if not engine_loaded then
+    do return end
+  end
   if a.type==nil then
     a.type="lead"
   end
@@ -421,27 +444,42 @@ function play_note(a)
   a.noise_attack=a.noise_attack or params:get(a.type.."noise_attack")
   a.noise_decay=a.noise_decay or params:get(a.type.."noise_decay")
   -- tab.print(a)
-  engine.fm1(
-    a.note,
-    a.amp,
-    a.pan,
-    a.attack,
-    a.decay,
-    a.attack_curve,
-    a.decay_curve,
-    a.mod_ratio,
-    a.car_ratio,
-    a.index,
-    a.index_scale,
-    a.send,
-    a.eq_freq,
-    a.eq_db,
-    a.lpf,
-    a.noise,
-    a.noise_attack,
-    a.noise_decay,
-    a.type
-  )
+  if engine_loaded=="Odashodasho" then
+    engine.fm1(
+      a.note,
+      a.amp,
+      a.pan,
+      a.attack,
+      a.decay,
+      a.attack_curve,
+      a.decay_curve,
+      a.mod_ratio,
+      a.car_ratio,
+      a.index,
+      a.index_scale,
+      a.send,
+      a.eq_freq,
+      a.eq_db,
+      a.lpf,
+      a.noise,
+      a.noise_attack,
+      a.noise_decay,
+      a.type
+    )
+  else
+    mx:on({
+      name=mx_instrument_list[params:get(a.type.."sample")],
+      midi=a.note,
+      velocity=80,
+      amp=a.amp,
+      attack=a.attack,
+      decay=a.decay,
+      sustain=0,
+      release=0,
+      pan=a.pan,
+      lpf=a.lpf,
+    })
+  end
 
   -- send out midi if activated
   if params:get(a.type.."midi_out")>1 then
