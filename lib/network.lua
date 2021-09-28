@@ -158,6 +158,29 @@ function Network:networked(i)
   return r
 end
 
+function Network:randomize(d)
+  if d>0 then
+    -- add random connection
+    local i=math.random(1,8)
+    local j=math.random(1,8)
+    local k=0
+    while (not self:is_connected_to(i,j)) and i~=j do
+      i=math.random(1,8)
+      j=math.random(1,8)
+      k=k+1
+      if k>30 then
+        do return end
+      end
+    end
+    table.insert(self.conn,{i,j})
+  elseif d<0 then
+    -- remove last connection
+    if #self.conn>0 then
+      table.remove(self.conn,#self.conn)
+    end
+  end
+end
+
 function Network:connect(i,j)
   if i==nil and j==nil then
     if self.pos_hold==nil then

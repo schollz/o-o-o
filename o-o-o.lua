@@ -487,9 +487,9 @@ function play_note(a)
     local conn=midi_conn[params:get(a.type.."midi_out")]
     conn:note_on(a.note,util.clamp(math.floor(a.amp*127),0,127))
   end
-  if params:get(a.type.."crow_out")>1 then 
-    local i=1 
-    if params:get(a.type.."crow_out")==3 then 
+  if params:get(a.type.."crow_out")>1 then
+    local i=1
+    if params:get(a.type.."crow_out")==3 then
       i=3
     end
     crow.output[i].volts=(a.note-21)/12
@@ -563,6 +563,7 @@ function enc(k,d)
       params:delta(instrument_list[global_page].."db",d)
     elseif k==2 then
     else
+      networks[global_page]:randomize(sign(d))
     end
   else
     if k==1 then
