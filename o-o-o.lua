@@ -1,4 +1,4 @@
--- o-o-o v0.0.1
+-- o-o-o v0.1.0
 --
 -- connect the dots.
 --
@@ -14,6 +14,8 @@
 -- K2 cancels connection
 -- K1+K3 pauses instrument
 -- K1+K2 removes all connections
+-- K1+E1 changes volume
+-- K1+E3 adds/removes randomly
 
 -- keep track of which keys are down
 keydown={}
@@ -29,8 +31,10 @@ local Lattice=require("lattice")
 local MusicUtil=require("musicutil")
 local Network=include("o-o-o/lib/network")
 local Gridd=include("o-o-o/lib/grid_")
-
-engine.name="Odashodasho"
+local mxsamples=nil
+if util.file_exists(_path.code.."mx.samples") then
+  mxsamples=include("mx.samples/lib/mx.samples")
+end
 
 -- define patches
 patches={}
@@ -162,10 +166,21 @@ patches["pad"]={
 }
 
 function init()
+  -- engine.name="Odashodasho"
+  engine_loaded="none"
   -- available divisions
   global_div_scales={1/16,1/8,1/4,1/2,1,2,4,8,16}
   global_page=1
   networks={}
+
+  -- initiate mx samples
+  if mxsamples~=nil then
+    mx=mxsamples:new()
+    mx_instrument_list=mx:list_instruments()
+  else
+    mx=nil
+    mx_instrument_list={}
+  end
 
   -- -- setup softcut stereo delay (based on halfsecond)
   -- print("starting halfsecond")
@@ -210,22 +225,34 @@ function init()
       table.insert(midi_conn,midi.connect(dev.port))
     end
   end
+  crow_outs={"none","1+2","3+4"}
 
   params:add_separator("o-o-o")
-  -- TODO: add seed
+  -- add seed
   params:add{type="control",id="seed",name="seed",controlspec=controlspec.new(0,1000,'lin',1,42,'',1/1000),action=function(x)
     for _,nw in ipairs(networks) do
       nw:init_dots()
     end
   end}
+  engine_list={"Odashodasho"}
+  if #mx_instrument_list>0 then
+    table.insert(engine_list,"MxSamples")
+  end
+  params:add_option("engine_name","engine",engine_list,1)
+  params:set_action("engine_name",function(x)
+    update_engine()
+  end)
   local scale_names={}
   for i=1,#MusicUtil.SCALES do
     table.insert(scale_names,string.lower(MusicUtil.SCALES[i].name))
   end
   -- setup parameters
+  parameter_list={}
+  parameter_list["Odashodasho"]={"attack_curve","decay_curve","mod_ratio","car_ratio","index","index_scale","noise","noise_attack","noise_decay","eq_freq","eq_db"}
+  parameter_list["MxSamples"]={"sample"}
   instrument_list={"lead","pad","bass","kick","snare","hihat"}
   for _,ins in ipairs(instrument_list) do
-    params:add_group(ins,21)
+    params:add_group(ins,23)
     params:add{type="option",id=ins.."scale_mode",name="scale mode",
       options=scale_names,default=5,
     action=function() generate_scale() end}
@@ -236,6 +263,7 @@ function init()
       local val=math.floor(util.linlin(0,1,v.controlspec.minval,v.controlspec.maxval,v.raw)*10)/10
       return ((val<0) and "" or "+")..val.." dB"
     end}
+    params:add{type="option",id=ins.."sample",name="sample",options=mx_instrument_list,default=1}
     params:add{type="control",id=ins.."attack",name="attack",controlspec=controlspec.new(0,8,'lin',0.01,patches[ins].attack,'beats',0.01/8)}
     params:add{type="control",id=ins.."decay",name="decay",controlspec=controlspec.new(0,8,'lin',0.01,patches[ins].decay,'beats',0.01/8)}
     params:add{type="control",id=ins.."attack_curve",name="attack curve",controlspec=controlspec.new(-8,8,'lin',1,patches[ins].attack_curve,'',1/16)}
@@ -267,6 +295,7 @@ function init()
     -- add optional midi out and crow out
     params:add_option(ins.."midi_out","midi out",midi_devices)
     params:add{type="control",id=ins.."midi_ch",name="midi out ch",controlspec=controlspec.new(1,16,'lin',1,1,'',1/16)}
+    params:add_option(ins.."crow_out","crow out",crow_outs)
   end
 
   -- setup networks
@@ -285,13 +314,13 @@ function init()
           note=global_scales[v][note]
           local attack=params:get(v.."attack")*clock.get_beat_sec()*1*nw.div
           local decay=params:get(v.."decay")*clock.get_beat_sec()*1*nw.div
-          fm1({note=note,pan=(note%12)/12-0.5,type=v,decay=decay,attack=attack})
+          play_note({note=note,pan=(note%12)/12-0.5,type=v,decay=decay,attack=attack})
         end
       else
         local note=global_scales[v][nw.id]
         local attack=params:get(v.."attack")*clock.get_beat_sec()*16*nw.div
         local decay=params:get(v.."decay")*clock.get_beat_sec()*16*nw.div
-        fm1({amp=nw.amp,note=note,pan=nw.pan,type=v,attack=attack,decay=decay})
+        play_note({amp=nw.amp,note=note,pan=nw.pan,type=v,attack=attack,decay=decay})
       end
     end)
     networks[i]:toggle_play()
@@ -335,7 +364,7 @@ function init()
 
   -- add osc
   osc.event=function(path,args,from)
-    if path=="voice" then
+    if path=="odashodasho_voice" then
       local dat={}
       for i in string.gmatch(args[1],"%S+") do
         table.insert(dat,i)
@@ -348,10 +377,44 @@ function init()
       end
     end
   end
+
+  -- update parameters menu
+  update_engine()
 end
 
--- fm1 is a helper function for the engie
-function fm1(a)
+function update_engine()
+  -- TODO: update the parameter menu
+  local name=engine_list[params:get("engine_name")]
+  if engine_loaded~=name then
+    engine.load(name,function()
+      print("loaded "..name)
+      engine_loaded=name
+      -- write this engine as last used for next default on startup
+      f=io.open(_path.data.."o-o-o/engine","w")
+      f:write(params:get("engine_name"))
+      f:close()
+    end)
+    engine.name=name
+  end
+  -- update parameter menu
+  for ename,pnames in pairs(parameter_list) do
+    for _,pname in ipairs(pnames) do
+      for _,ins in ipairs(instrument_list) do
+        if ename==name then
+          params:show(ins..pname)
+        else
+          params:hide(ins..pname)
+        end
+      end
+    end
+  end
+end
+
+-- play_note is a helper function for the engines
+function play_note(a)
+  if not engine_loaded then
+    do return end
+  end
   if a.type==nil then
     a.type="lead"
   end
@@ -384,32 +447,57 @@ function fm1(a)
   a.noise_attack=a.noise_attack or params:get(a.type.."noise_attack")
   a.noise_decay=a.noise_decay or params:get(a.type.."noise_decay")
   -- tab.print(a)
-  engine.fm1(
-    a.note,
-    a.amp,
-    a.pan,
-    a.attack,
-    a.decay,
-    a.attack_curve,
-    a.decay_curve,
-    a.mod_ratio,
-    a.car_ratio,
-    a.index,
-    a.index_scale,
-    a.send,
-    a.eq_freq,
-    a.eq_db,
-    a.lpf,
-    a.noise,
-    a.noise_attack,
-    a.noise_decay,
-    a.type
-  )
+  if engine_loaded=="Odashodasho" then
+    engine.fm1(
+      a.note,
+      a.amp,
+      a.pan,
+      a.attack,
+      a.decay,
+      a.attack_curve,
+      a.decay_curve,
+      a.mod_ratio,
+      a.car_ratio,
+      a.index,
+      a.index_scale,
+      a.send,
+      a.eq_freq,
+      a.eq_db,
+      a.lpf,
+      a.noise,
+      a.noise_attack,
+      a.noise_decay,
+      a.type
+    )
+  else
+    mx:on({
+      name=mx_instrument_list[params:get(a.type.."sample")],
+      midi=a.note,
+      velocity=80,
+      amp=a.amp,
+      attack=a.attack,
+      decay=a.decay,
+      sustain=0,
+      release=0,
+      pan=a.pan,
+      lpf=a.lpf,
+      reverb_send=util.dbamp(a.send),
+    })
+  end
 
   -- send out midi if activated
   if params:get(a.type.."midi_out")>1 then
     local conn=midi_conn[params:get(a.type.."midi_out")]
     conn:note_on(a.note,util.clamp(math.floor(a.amp*127),0,127))
+  end
+  if params:get(a.type.."crow_out")>1 then
+    local i=1
+    if params:get(a.type.."crow_out")==3 then
+      i=3
+    end
+    crow.output[i].volts=(a.note-21)/12
+    crow.output[i+1].action="{ to(10,"..(a.attack/2)..",linear), to(0,"..(a.decay/2)..",exponential) }"
+    crow.output[i+1]()
   end
 end
 
@@ -478,6 +566,7 @@ function enc(k,d)
       params:delta(instrument_list[global_page].."db",d)
     elseif k==2 then
     else
+      networks[global_page]:randomize(sign(d))
     end
   else
     if k==1 then

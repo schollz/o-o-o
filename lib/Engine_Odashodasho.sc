@@ -118,7 +118,7 @@ Engine_Odashodasho : CroneEngine {
 				\fx,fm1Bus,
 			]).onFree({
 				NetAddr("127.0.0.1",10111)
-					.sendMsg("voice",msg[19]++" "++msg[1],0);
+					.sendMsg("odashodasho_voice",msg[19]++" "++msg[1],0);
 			})
 			// NodeWatcher.register(fm1Voices.at(fullname));
 		});

@@ -8,7 +8,8 @@ function GGrid:new(args)
   m.grid_on=args.grid_on==nil and true or args.grid_on
 
   -- initiate the grid
-  m.g=grid.connect()
+  local grid_device=util.file_exists(_path.code.."midigrid") and include "midigrid/lib/mg_128" or grid
+  m.g=grid_device.connect()
   m.g.key=function(x,y,z)
     if m.grid_on then
       m:grid_key(x,y,z)
@@ -62,6 +63,8 @@ function GGrid:key_press(row,col,on)
       global_page=util.clamp(global_page-1,1,#networks)
     elseif col==10 and row==8 then
       global_page=util.clamp(global_page+1,1,#networks)
+    elseif col==16 and row==8 then
+      networks[global_page]:toggle_play()
     end
     do return end
   end
@@ -132,8 +135,11 @@ function GGrid:get_visual()
   end
 
   -- illuminate page buttons
-  self.visual[8][9]=10
-  self.visual[8][10]=10
+  self.visual[8][10]=math.floor(util.linlin(1,#networks,1,15.9,global_page))
+  self.visual[8][9]=15-self.visual[8][10]
+
+  -- illuminate playing button
+  self.visual[8][16]=networks[global_page].playing and 10 or 2
 
   return self.visual
 end
