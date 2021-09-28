@@ -1,4 +1,4 @@
--- o-o-o v0.0.1
+-- o-o-o v0.1.0
 --
 -- connect the dots.
 --
@@ -164,9 +164,8 @@ patches["pad"]={
 }
 
 function init()
-  engine.name="Odashodasho"
-  engine_loaded="Odashodasho"
-
+  -- engine.name="Odashodasho"
+  engine_loaded="none"
   -- available divisions
   global_div_scales={1/16,1/8,1/4,1/2,1,2,4,8,16}
   global_page=1
@@ -224,6 +223,7 @@ function init()
       table.insert(midi_conn,midi.connect(dev.port))
     end
   end
+  crow_outs={"none","1+2","3+4"}
 
   params:add_separator("o-o-o")
   -- add seed
@@ -250,7 +250,7 @@ function init()
   parameter_list["MxSamples"]={"sample"}
   instrument_list={"lead","pad","bass","kick","snare","hihat"}
   for _,ins in ipairs(instrument_list) do
-    params:add_group(ins,22)
+    params:add_group(ins,23)
     params:add{type="option",id=ins.."scale_mode",name="scale mode",
       options=scale_names,default=5,
     action=function() generate_scale() end}
@@ -293,6 +293,7 @@ function init()
     -- add optional midi out and crow out
     params:add_option(ins.."midi_out","midi out",midi_devices)
     params:add{type="control",id=ins.."midi_ch",name="midi out ch",controlspec=controlspec.new(1,16,'lin',1,1,'',1/16)}
+    params:add_option(ins.."crow_out","crow out",crow_outs)
   end
 
   -- setup networks
@@ -361,7 +362,7 @@ function init()
 
   -- add osc
   osc.event=function(path,args,from)
-    if path=="voice" then
+    if path=="odashodasho_voice" then
       local dat={}
       for i in string.gmatch(args[1],"%S+") do
         table.insert(dat,i)
@@ -485,6 +486,15 @@ function play_note(a)
   if params:get(a.type.."midi_out")>1 then
     local conn=midi_conn[params:get(a.type.."midi_out")]
     conn:note_on(a.note,util.clamp(math.floor(a.amp*127),0,127))
+  end
+  if params:get(a.type.."crow_out")>1 then 
+    local i=1 
+    if params:get(a.type.."crow_out")==3 then 
+      i=3
+    end
+    crow.output[i].volts=(a.note-21)/12
+    crow.output[i+1].action="{ to(10,"..(a.attack/2)..",linear), to(0,"..(a.decay/2)..",exponential) }"
+    crow.output[i+1]()
   end
 end
 
