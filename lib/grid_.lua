@@ -8,7 +8,8 @@ function GGrid:new(args)
   m.grid_on=args.grid_on==nil and true or args.grid_on
 
   -- initiate the grid
-  m.g=grid.connect()
+  local grid_device=util.file_exists(_path.code.."midigrid") and include "midigrid/lib/mg_128" or grid
+  m.g=grid_device.connect()
   m.g.key=function(x,y,z)
     if m.grid_on then
       m:grid_key(x,y,z)
