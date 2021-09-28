@@ -63,6 +63,8 @@ function GGrid:key_press(row,col,on)
       global_page=util.clamp(global_page-1,1,#networks)
     elseif col==10 and row==8 then
       global_page=util.clamp(global_page+1,1,#networks)
+    elseif col==16 and row==8 then
+      networks[global_page]:toggle_play()
     end
     do return end
   end
@@ -133,8 +135,11 @@ function GGrid:get_visual()
   end
 
   -- illuminate page buttons
-  self.visual[8][9]=10
-  self.visual[8][10]=10
+  self.visual[8][9]=math.floor(util.linlin(#networks,1,1,15.9,global_page))
+  self.visual[8][10]=math.floor(util.linlin(1,#networks,1,15.9,global_page))
+
+  -- illuminate playing button
+  self.visual[8][16]=networks[global_page].playing and 10 or 2
 
   return self.visual
 end
