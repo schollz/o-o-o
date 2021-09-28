@@ -373,7 +373,7 @@ function init()
       local note=tonumber(dat[2])
       if params:get(type.."midi_out")>1 then
         local conn=midi_conn[params:get(type.."midi_out")]
-        conn:note_off(note)
+        conn:note_off(note,0,math.floor(params:get(type.."midi_ch")))
       end
     end
   end
@@ -488,7 +488,7 @@ function play_note(a)
   -- send out midi if activated
   if params:get(a.type.."midi_out")>1 then
     local conn=midi_conn[params:get(a.type.."midi_out")]
-    conn:note_on(a.note,util.clamp(math.floor(a.amp*127),0,127))
+    conn:note_on(a.note,util.clamp(math.floor(a.amp*127),0,127),math.floor(params:get(a.type.."midi_ch")))
   end
   if params:get(a.type.."crow_out")>1 then
     local i=1
