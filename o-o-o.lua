@@ -14,6 +14,8 @@
 -- K2 cancels connection
 -- K1+K3 pauses instrument
 -- K1+K2 removes all connections
+-- K1+E1 changes volume
+-- K1+E3 adds/removes randomly
 
 -- keep track of which keys are down
 keydown={}
@@ -479,6 +481,7 @@ function play_note(a)
       release=0,
       pan=a.pan,
       lpf=a.lpf,
+      reverb_send=util.dbamp(a.send),
     })
   end
 

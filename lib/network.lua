@@ -161,14 +161,15 @@ end
 function Network:randomize(d)
   if d>0 then
     -- add random connection
-    local i=math.random(1,8)
-    local j=math.random(1,8)
+    local i=math.random(1,64)
+    local j=math.random(1,64)
     local k=0
-    while (not self:is_connected_to(i,j)) and i~=j do
-      i=math.random(1,8)
-      j=math.random(1,8)
+    while (not self:is_connected_to(i,j)) and i==j do
+      i=math.random(1,64)
+      j=math.random(1,64)
       k=k+1
       if k>30 then
+	print("error randomizing")
         do return end
       end
     end
@@ -383,9 +384,15 @@ function Network:draw()
     end
 
     screen.move(128,15)
+    screen.text_right("k1+e1:")
+    screen.move(128,25)
     local db=params:get(instrument_list[self.id].."db")
     screen.text_right((db>0 and "+" or "")..db.." dB")
 
+    screen.move(128,40)
+    screen.text_right("k1+e3:")
+    screen.move(128,50)
+    screen.text_right("rand")
     screen.move(118,5)
     screen.text_right("k1+k3:")
   end

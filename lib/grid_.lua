@@ -135,8 +135,8 @@ function GGrid:get_visual()
   end
 
   -- illuminate page buttons
-  self.visual[8][9]=math.floor(util.linlin(#networks,1,1,15.9,global_page))
   self.visual[8][10]=math.floor(util.linlin(1,#networks,1,15.9,global_page))
+  self.visual[8][9]=15-self.visual[8][10]
 
   -- illuminate playing button
   self.visual[8][16]=networks[global_page].playing and 10 or 2
