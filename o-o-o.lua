@@ -35,6 +35,9 @@ local mxsamples=nil
 if util.file_exists(_path.code.."mx.samples") then
   mxsamples=include("mx.samples/lib/mx.samples")
 end
+uimessage=""
+
+local save_params={"scale_mode","root_note","attack","decay","attack_curve","decay_curve","mod_ratio","car_ratio","index","index_scale","sample","reverb","eq_freq","eq_db","lpf","noise","noise_attack","noise_attack","noise_decay","div_scale"}
 
 -- define patches
 patches={}
@@ -616,6 +619,21 @@ function redraw()
 
   networks[global_page]:draw()
 
+  if uimessage~="" then
+    screen.level(15)
+    x=64
+    y=28
+    w=string.len(uimessage)*6
+    screen.rect(x-w/2,y,w,10)
+    screen.fill()
+    screen.level(15)
+    screen.rect(x-w/2,y,w,10)
+    screen.stroke()
+    screen.move(x,y+7)
+    screen.level(0)
+    screen.text_center(uimessage)
+  end
+
   screen.update()
 end
 
@@ -656,20 +674,40 @@ end
 
 -- bank_save will save the current state to slot i
 function bank_save()
-  local i=params:get(instrument_list[global_page].."bank")
+  local ins=instrument_list[global_page]
+  local i=params:get(ins.."bank")
   bank[global_page][i].nw=json.encode(networks[global_page].nw)
   bank[global_page][i].conn=json.encode(networks[global_page].conn)
+  for _,p in ipairs(save_params) do
+    bank[global_page][i][p]=params:get(ins..p)
+  end
   print("bank_save "..instrument_list[global_page].." into bank "..i)
+  show_message("saved in bank "..i)
 end
 
 -- bank_load will load slot i to the current state
 function bank_load()
-  local i=params:get(instrument_list[global_page].."bank")
+  local ins=instrument_list[global_page]
+  local i=params:get(ins.."bank")
   if bank[global_page][i].nw~=nil then
     networks[global_page].nw=json.decode(bank[global_page][i].nw)
   end
   if bank[global_page][i].conn~=nil then
     networks[global_page].conn=json.decode(bank[global_page][i].conn)
   end
+  for _,p in ipairs(save_params) do
+    params:set(ins..p,bank[global_page][i][p])
+  end
   print("bank_load "..instrument_list[global_page].." into bank "..i)
+  show_message("loaded bank "..i)
+end
+
+function show_message(message)
+  uimessage=message
+  redraw()
+  clock.run(function()
+    clock.sleep(1)
+    uimessage=""
+    redraw()
+  end)
 end
