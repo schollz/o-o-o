@@ -32,6 +32,7 @@ there are gradients in the rows and columns. these are hard-coded in the script,
 
 the sounds, scales and root notes for each instrument can be changed in the parameters. you can also set each instrument to send to a midi device or to a crow device (one output for pitch, one for envelope). each instrument has 16 slots in a bank which you can save/load patches for individual instruments. the patch saves will include parameters for the instrument as well as connections in the networ. change banks for `k1+e2` and save a bank by pausing+starting a track (`k1+k3` twice) and load a bank using `k1+k2`.
 
+the grid is optional and opens up some controls. the first 8 columns mirror the grid on the screen and connections can be made by pressing any two points. the first two rows of the second 8 columns (if using a 8x16 grid) save and recall patch saves - you can save a patch by holding for > 1 second and then releasing, and you can load a patch by quickly pressing and releasing. the other buttons on the grid are for scrolling through the instruments and toggling play.
 
 this script wouldn't exist without  Eli Fieldsteel's [FM tutorials](https://github.com/elifieldsteel/SuperCollider-Tutorials/blob/4460e024800b6525e4223c6cce02d9643d0cfbe3/full%20video%20scripts/22_script.scd), which the internal engine is based. it also wouldn't exist without [goldeneye](https://llllllll.co/t/goldeneye) where @tyleretters first implemented this genius idea of creating a grid of random euclidean rhythms.
 
