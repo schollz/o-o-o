@@ -64,9 +64,18 @@ function GGrid:key_press(row,col,on)
   end
   if col>8 then
     if not on then
-      -- load bank on short press
-
-      -- save bank on long press
+      if row<3 then
+        local bank=(col-8)+(row-1)*8
+        local ins=instrument_list[global_page]
+        params:set(ins.."bank",bank)
+        if time_pressed>0.5 then 
+          -- load bank on short press
+          bank_load()
+        else
+          -- save bank on long press
+          bank_save()
+        end
+      end
       do return end
     end
     if col==9 and row==8 then
