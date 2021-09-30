@@ -1,4 +1,4 @@
--- o-o-o v0.1.0
+-- o-o-o v0.2.0
 --
 -- connect the dots.
 --
@@ -172,6 +172,7 @@ function init()
   global_div_scales={1/16,1/8,1/4,1/2,1,2,4,8,16}
   global_page=1
   networks={}
+  bank={}
 
   -- initiate mx samples
   if mxsamples~=nil then
@@ -252,7 +253,7 @@ function init()
   parameter_list["MxSamples"]={"sample"}
   instrument_list={"lead","pad","bass","kick","snare","hihat"}
   for _,ins in ipairs(instrument_list) do
-    params:add_group(ins,23)
+    params:add_group(ins,26)
     params:add{type="option",id=ins.."scale_mode",name="scale mode",
       options=scale_names,default=5,
     action=function() generate_scale() end}
@@ -296,6 +297,23 @@ function init()
     params:add_option(ins.."midi_out","midi out",midi_devices)
     params:add{type="control",id=ins.."midi_ch",name="midi out ch",controlspec=controlspec.new(1,16,'lin',1,1,'',1/16)}
     params:add_option(ins.."crow_out","crow out",crow_outs)
+    params:add{type="control",id=ins.."bank",name="bank",controlspec=controlspec.new(1,16,'lin',1,1,'',1/16)}
+    params:add{type='binary',id=ins..'save_bank',name='save bank',behavior='momentary',
+      action=function(v)
+        if v==1 then
+          print("save bank "..ins)
+          bank_save()
+        end
+      end
+    }
+    params:add{type='binary',id=ins..'load_bank',name='load bank',behavior='momentary',
+      action=function(v)
+        if v==1 then
+          print("load bank "..ins)
+          bank_load()
+        end
+      end
+    }
   end
 
   -- setup networks
@@ -303,6 +321,10 @@ function init()
   generate_scale()
   local pad_cols={{2,2},{2,3},{3,2},{3,1},{2,2},{2,3},{3,2},{1,3}}
   for i,v in ipairs(instrument_list) do
+    bank[i]={}
+    for j=1,16 do
+      bank[i][j]={}
+    end
     networks[i]=Network:new({divs=patches[v].divs,dens=patches[v].dens,id=i})
     networks[i]:set_action(function(nw)
       if v=="pad" then
@@ -546,9 +568,12 @@ function key(k,z)
   if keydown[1] and z==1 then
     if k==1 then
     elseif k==2 then
-      networks[global_page]:clear()
+      bank_load()
     elseif k==3 then
       networks[global_page]:toggle_play()
+      if networks[global_page].playing then
+        bank_save()
+      end
     end
   elseif z==1 then
     if k==1 then
@@ -565,6 +590,7 @@ function enc(k,d)
     if k==1 then
       params:delta(instrument_list[global_page].."db",d)
     elseif k==2 then
+      params:delta(instrument_list[global_page].."bank",d)
     else
       networks[global_page]:randomize(sign(d))
     end
@@ -605,6 +631,7 @@ function odasho_save(filename)
     data[i]={}
     data[i].nw=nw.nw
     data[i].conn=nw.conn
+    data[i].bank=bank[i]
   end
   file=io.open(filename,"w+")
   io.output(file)
@@ -623,5 +650,26 @@ function odasho_load(filename)
   for i,_ in ipairs(networks) do
     networks[i].nw=data[i].nw
     networks[i].conn=data[i].conn
+    bank[i]=data[i].bank
   end
+end
+
+-- bank_save will save the current state to slot i
+function bank_save()
+  local i=params:get(instrument_list[global_page].."bank")
+  bank[global_page][i].nw=json.encode(networks[global_page].nw)
+  bank[global_page][i].conn=json.encode(networks[global_page].conn)
+  print("bank_save "..instrument_list[global_page].." into bank "..i)
+end
+
+-- bank_load will load slot i to the current state
+function bank_load()
+  local i=params:get(instrument_list[global_page].."bank")
+  if bank[global_page][i].nw~=nil then
+    networks[global_page].nw=json.decode(bank[global_page][i].nw)
+  end
+  if bank[global_page][i].conn~=nil then
+    networks[global_page].conn=json.decode(bank[global_page][i].conn)
+  end
+  print("bank_load "..instrument_list[global_page].." into bank "..i)
 end
