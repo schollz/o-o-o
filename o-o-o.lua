@@ -326,7 +326,7 @@ function init()
   for i,v in ipairs(instrument_list) do
     bank[i]={}
     for j=1,16 do
-      bank[i][j]={}
+      bank[i][j]={saved=false}
     end
     networks[i]=Network:new({divs=patches[v].divs,dens=patches[v].dens,id=i})
     networks[i]:set_action(function(nw)
@@ -611,13 +611,15 @@ end
 function redraw()
   screen.clear()
 
-  screen.level(15)
-  screen.move(128,60)
-  if networks[global_page].name~=nil then
-    if engine_loaded=="MxSamples" then
-      screen.text_right(mx_instrument_list[params:get(instrument_list[global_page].."sample")])
-    else
-      screen.text_right(networks[global_page].name)
+  if not keydown[1] then
+    screen.level(15)
+    screen.move(128,60)
+    if networks[global_page].name~=nil then
+      if engine_loaded=="MxSamples" then
+        screen.text_right(mx_instrument_list[params:get(instrument_list[global_page].."sample")])
+      else
+        screen.text_right(networks[global_page].name)
+      end
     end
   end
 
@@ -680,6 +682,7 @@ end
 function bank_save()
   local ins=instrument_list[global_page]
   local i=params:get(ins.."bank")
+  bank[global_page][i].saved=true
   bank[global_page][i].nw=json.encode(networks[global_page].nw)
   bank[global_page][i].conn=json.encode(networks[global_page].conn)
   for _,p in ipairs(save_params) do
@@ -693,6 +696,9 @@ end
 function bank_load()
   local ins=instrument_list[global_page]
   local i=params:get(ins.."bank")
+  if not bank[global_page][i].saved then
+    do return end
+  end
   if bank[global_page][i].nw~=nil then
     networks[global_page].nw=json.decode(bank[global_page][i].nw)
   end
@@ -700,7 +706,9 @@ function bank_load()
     networks[global_page].conn=json.decode(bank[global_page][i].conn)
   end
   for _,p in ipairs(save_params) do
-    params:set(ins..p,bank[global_page][i][p])
+    if bank[global_page][i][p]~=nil then
+      params:set(ins..p,bank[global_page][i][p])
+    end
   end
   print("bank_load "..instrument_list[global_page].." into bank "..i)
   show_message("loaded bank "..i)

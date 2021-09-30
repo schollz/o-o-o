@@ -32,23 +32,21 @@ function GGrid:new(args)
   m.pressed_buttons={}
 
   -- grid refreshing
-  blinky=0
-  blinky_step=1
+  m.blinky=0
+  m.blinky_step=1
   m.grid_refresh=metro.init()
   m.grid_refresh.time=1/15
   m.grid_refresh.event=function()
     if m.grid_on then
       m:grid_redraw()
     end
-    blinky_step=blinky+1 
-    if blinky_step>15 then 
-      blinky = 1-blinky
-      blinky_step=0
+    m.blinky_step=m.blinky_step+1
+    if m.blinky_step>15 then
+      m.blinky=1-m.blinky
+      m.blinky_step=0
     end
   end
   m.grid_refresh:start()
-
-
 
   return m
 end
@@ -77,12 +75,12 @@ function GGrid:key_press(row,col,on)
         local bank_id=(col-8)+(row-1)*8
         local ins=instrument_list[global_page]
         params:set(ins.."bank",bank_id)
-        if time_pressed>0.5 then 
-          -- load bank on short press
-          bank_load()
-        else
+        if time_pressed>0.5 then
           -- save bank on long press
           bank_save()
+        else
+          -- load bank on short press
+          bank_load()
         end
       end
       do return end
@@ -174,8 +172,8 @@ function GGrid:get_visual()
   for row=1,2 do
     for col=9,16 do
       local bank_id=(col-8)+(row-1)*8
-      self.visual[row][col]=#bank[global_page][bank_id]>0 and 10 or 5
-      self.visual[row][col]=self.visual[row][col]+(bank_id==params:get(ins.."bank") and 5 or 0)*blinky
+      self.visual[row][col]=(bank_id==params:get(ins.."bank") and 2 or 0)*self.blinky
+      self.visual[row][col]=self.visual[row][col]+(bank[global_page][bank_id].saved and 4 or 1)
     end
   end
 
