@@ -41,3 +41,12 @@ install with
 ```
 
 https://github.com/schollz/o-o-o
+
+
+## Todo
+
+
+- [ ] Each instrument can store 16 patterns, includes network connections and all instrument params
+- [ ] K1+K2 -> load pattern (instead of removing all, thats K1+E3)
+- [ ] K1+K3 toggles playing + saves to current pattern
+- [ ] K1+E2 -> changes current pattern
