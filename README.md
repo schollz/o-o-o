@@ -17,10 +17,12 @@ https://vimeo.com/615483324
 - E2/E3 changes position
 - K3 adds connection
 - K2 cancels connection
-- K1+K3 pauses instrument
-- K1+K2 removes all connections
+- K1 for help
+- K1+K3 pauses/plays+saves on play
+- K1+K2 loads current bank
 - K1+E1 changes volume
-- K1+E3 adds random connection or removes last
+- K1+E2 changes current bank
+- K1+E3 adds random (cw) or removes last (ccw)
 
 each dot represents a sound and has an underlying random euclidean rhythm to play that sound. the rhythm is randomly generated based on a seed (`PARAMS > seed`). the triggered sounds are all generated using an internal FM engine ("Odashodasho" engine). its possible to change the engine to [MxSamples](https://norns.community/en/authors/infinitedigits/mx-samples) in the parameters (`PARAMS > engine`)
 
@@ -28,7 +30,8 @@ a dot will trigger a sound if it is connected to another dot. a dot with zero in
 
 there are gradients in the rows and columns. these are hard-coded in the script, but you can easily change the behavior through maiden. currently they are coded so that columns on the left typically trigger slower (except pads) and columns on the right trigger faster. rows on the bottom are lower notes and rows at the top are higher notes (except pads). pads are special - each dot actually represents two intervals, where the row specifies root and the column specifies the other two intervals.
 
-the sounds, scales and root notes for each instrument can be changed in the parameters. you can also set each instrument to send to a midi device or to a crow device (one output for pitch, one for envelope).
+the sounds, scales and root notes for each instrument can be changed in the parameters. you can also set each instrument to send to a midi device or to a crow device (one output for pitch, one for envelope). each instrument has 16 slots in a bank which you can save/load patches for individual instruments. the patch saves will include parameters for the instrument as well as connections in the networ. change banks for `k1+e2` and save a bank by pausing+starting a track (`k1+k3` twice) and load a bank using `k1+k2`.
+
 
 this script wouldn't exist without  Eli Fieldsteel's [FM tutorials](https://github.com/elifieldsteel/SuperCollider-Tutorials/blob/4460e024800b6525e4223c6cce02d9643d0cfbe3/full%20video%20scripts/22_script.scd), which the internal engine is based. it also wouldn't exist without [goldeneye](https://llllllll.co/t/goldeneye) where @tyleretters first implemented this genius idea of creating a grid of random euclidean rhythms.
 

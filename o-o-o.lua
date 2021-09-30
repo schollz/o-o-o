@@ -7,15 +7,18 @@
 --
 --    ▼ instructions below ▼
 --
--- hold K1 for help
+-- K1 for help
 -- E1 changes instrument
 -- E2/E3 changes position
 -- K3 adds connection
 -- K2 cancels connection
--- K1+K3 pauses instrument
--- K1+K2 removes all connections
+-- K1+K3 pauses/plays
+--     and saves on play
+-- K1+K2 loads current bank
 -- K1+E1 changes volume
--- K1+E3 adds/removes randomly
+-- K1+E2 changes current bank
+-- K1+E3 adds random (cw) 
+--       or removes last (ccw)
 
 -- keep track of which keys are down
 keydown={}
