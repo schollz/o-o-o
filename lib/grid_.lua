@@ -32,11 +32,18 @@ function GGrid:new(args)
   m.pressed_buttons={}
 
   -- grid refreshing
+  m.blinky=0
+  m.blinky_step=1
   m.grid_refresh=metro.init()
   m.grid_refresh.time=1/15
   m.grid_refresh.event=function()
     if m.grid_on then
       m:grid_redraw()
+    end
+    m.blinky_step=m.blinky_step+1
+    if m.blinky_step>15 then
+      m.blinky=1-m.blinky
+      m.blinky_step=0
     end
   end
   m.grid_refresh:start()
@@ -50,13 +57,32 @@ function GGrid:grid_key(x,y,z)
 end
 
 function GGrid:key_press(row,col,on)
+  local time_pressed=0
   if on then
-    self.pressed_buttons[row..","..col]=clock.get_beats()
+    self.pressed_buttons[row..","..col]=clock.get_beats()*clock.get_beat_sec()
   else
+    time_pressed=self.pressed_buttons[row..","..col]
+    if time_pressed~=nil then
+      time_pressed=clock.get_beats()*clock.get_beat_sec()-time_pressed
+    else
+      time_pressed=0
+    end
     self.pressed_buttons[row..","..col]=nil
   end
   if col>8 then
     if not on then
+      if row<3 then
+        local bank_id=(col-8)+(row-1)*8
+        local ins=instrument_list[global_page]
+        params:set(ins.."bank",bank_id)
+        if time_pressed>0.5 then
+          -- save bank on long press
+          bank_save()
+        else
+          -- load bank on short press
+          bank_load()
+        end
+      end
       do return end
     end
     if col==9 and row==8 then
@@ -140,6 +166,16 @@ function GGrid:get_visual()
 
   -- illuminate playing button
   self.visual[8][16]=networks[global_page].playing and 10 or 2
+
+  -- illuminate the bank buttons
+  local ins=instrument_list[global_page]
+  for row=1,2 do
+    for col=9,16 do
+      local bank_id=(col-8)+(row-1)*8
+      self.visual[row][col]=(bank_id==params:get(ins.."bank") and 2 or 0)*self.blinky
+      self.visual[row][col]=self.visual[row][col]+(bank[global_page][bank_id].saved and 4 or 1)
+    end
+  end
 
   return self.visual
 end

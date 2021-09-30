@@ -169,7 +169,7 @@ function Network:randomize(d)
       j=math.random(1,64)
       k=k+1
       if k>30 then
-	print("error randomizing")
+        print("error randomizing")
         do return end
       end
     end
@@ -372,7 +372,7 @@ function Network:draw()
 
   if keydown[1] then
     screen.level(15)
-    local help={{"k3","link"},{"k2","unlink"},{"e2/e3","move"},{"k1+k2","clear"}}
+    local help={{"k3","link"},{"k2","unlink"},{"k1+e2","bank "..math.floor(params:get(instrument_list[global_page].."bank"))},{"k1+k2","load"}}
     local y=7
     for _,h in ipairs(help) do
       screen.move(1,y)
@@ -392,9 +392,11 @@ function Network:draw()
     screen.move(128,40)
     screen.text_right("k1+e3:")
     screen.move(128,50)
-    screen.text_right("rand")
+    screen.text_right("(cw) rand")
+    screen.move(128,60)
+    screen.text_right("(ccw) clear")
     screen.move(118,5)
-    screen.text_right("k1+k3:")
+    screen.text_right("k1+k3 (saves to bank):")
   end
 
   -- show if playing
