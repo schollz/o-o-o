@@ -17,7 +17,7 @@
 -- K1+K2 loads current bank
 -- K1+E1 changes volume
 -- K1+E2 changes current bank
--- K1+E3 adds random (cw) 
+-- K1+E3 adds random (cw)
 --       or removes last (ccw)
 
 -- keep track of which keys are down
@@ -333,23 +333,7 @@ function init()
     end
     networks[i]=Network:new({divs=patches[v].divs,dens=patches[v].dens,id=i})
     networks[i]:set_action(function(nw)
-      if v=="pad" then
-        -- play three notes
-        local notes={9-nw.row}
-        table.insert(notes,notes[1]+pad_cols[nw.col][1])
-        table.insert(notes,notes[2]+pad_cols[nw.col][2])
-        for _,note in ipairs(notes) do
-          note=global_scales[v][note]
-          local attack=params:get(v.."attack")*clock.get_beat_sec()*1*nw.div
-          local decay=params:get(v.."decay")*clock.get_beat_sec()*1*nw.div
-          play_note({note=note,pan=(note%12)/12-0.5,type=v,decay=decay,attack=attack})
-        end
-      else
-        local note=global_scales[v][nw.id]
-        local attack=params:get(v.."attack")*clock.get_beat_sec()*16*nw.div
-        local decay=params:get(v.."decay")*clock.get_beat_sec()*16*nw.div
-        play_note({amp=nw.amp,note=note,pan=nw.pan,type=v,attack=attack,decay=decay})
-      end
+      perform(v,nw)
     end)
     networks[i]:toggle_play()
     networks[i].name=v
@@ -408,6 +392,26 @@ function init()
 
   -- update parameters menu
   update_engine()
+end
+
+function perform(v,nw)
+  if v=="pad" then
+    -- play three notes
+    local notes={9-nw.row}
+    table.insert(notes,notes[1]+pad_cols[nw.col][1])
+    table.insert(notes,notes[2]+pad_cols[nw.col][2])
+    for _,note in ipairs(notes) do
+      note=global_scales[v][note]
+      local attack=params:get(v.."attack")*clock.get_beat_sec()*1*nw.div
+      local decay=params:get(v.."decay")*clock.get_beat_sec()*1*nw.div
+      play_note({note=note,pan=(note%12)/12-0.5,type=v,decay=decay,attack=attack})
+    end
+  else
+    local note=global_scales[v][nw.id]
+    local attack=params:get(v.."attack")*clock.get_beat_sec()*16*nw.div
+    local decay=params:get(v.."decay")*clock.get_beat_sec()*16*nw.div
+    play_note({amp=nw.amp,note=note,pan=nw.pan,type=v,attack=attack,decay=decay})
+  end
 end
 
 function update_engine()

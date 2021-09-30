@@ -364,7 +364,7 @@ function Network:draw()
       screen.fill()
     end
     if self.pos==i then
-      screen.level(15)
+      screen.level(self.pos_hold and 15 or 4)
       screen.circle(x,y,4)
       screen.stroke()
     end
