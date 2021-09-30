@@ -253,6 +253,7 @@ function init()
   for i=1,#MusicUtil.SCALES do
     table.insert(scale_names,string.lower(MusicUtil.SCALES[i].name))
   end
+  params:add_option("playback","play during playback",{"off","on"},1)
   -- setup parameters
   parameter_list={}
   parameter_list["Odashodasho"]={"attack_curve","decay_curve","mod_ratio","car_ratio","index","index_scale","noise","noise_attack","noise_decay","eq_freq","eq_db"}
@@ -325,7 +326,6 @@ function init()
   -- setup networks
   -- local pad_cols={{2,2},{2,2},{2,3},{2,3},{3,2},{3,2},{3,1},{1,3}}
   generate_scale()
-  local pad_cols={{2,2},{2,3},{3,2},{3,1},{2,2},{2,3},{3,2},{1,3}}
   for i,v in ipairs(instrument_list) do
     bank[i]={}
     for j=1,16 do
@@ -333,7 +333,7 @@ function init()
     end
     networks[i]=Network:new({divs=patches[v].divs,dens=patches[v].dens,id=i})
     networks[i]:set_action(function(nw)
-      perform(v,nw)
+      perform(v,nw,true)
     end)
     networks[i]:toggle_play()
     networks[i].name=v
@@ -394,8 +394,12 @@ function init()
   update_engine()
 end
 
-function perform(v,nw)
+function perform(v,nw,do_perform)
+  if not do_perform then
+    do return end
+  end
   if v=="pad" then
+    local pad_cols={{2,2},{2,3},{3,2},{3,1},{2,2},{2,3},{3,2},{1,3}}
     -- play three notes
     local notes={9-nw.row}
     table.insert(notes,notes[1]+pad_cols[nw.col][1])
@@ -591,6 +595,7 @@ function key(k,z)
       networks[global_page]:disconnect()
     elseif k==3 then
       networks[global_page]:connect()
+      perform(instrument_list[global_page],networks[global_page]:current_nw(),networks[global_page].playing==false or params:get("playback")==2)
     end
   end
 end
