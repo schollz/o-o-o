@@ -614,7 +614,11 @@ function redraw()
   screen.level(15)
   screen.move(128,60)
   if networks[global_page].name~=nil then
-    screen.text_right(networks[global_page].name)
+    if engine_loaded=="MxSamples" then
+      screen.text_right(mx_instrument_list[params:get(instrument_list[global_page].."sample")])
+    else
+      screen.text_right(networks[global_page].name)
+    end
   end
 
   networks[global_page]:draw()
