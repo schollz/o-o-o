@@ -32,14 +32,23 @@ function GGrid:new(args)
   m.pressed_buttons={}
 
   -- grid refreshing
+  blinky=0
+  blinky_step=1
   m.grid_refresh=metro.init()
   m.grid_refresh.time=1/15
   m.grid_refresh.event=function()
     if m.grid_on then
       m:grid_redraw()
     end
+    blinky_step=blinky+1 
+    if blinky_step>15 then 
+      blinky = 1-blinky
+      blinky_step=0
+    end
   end
   m.grid_refresh:start()
+
+
 
   return m
 end
@@ -65,9 +74,9 @@ function GGrid:key_press(row,col,on)
   if col>8 then
     if not on then
       if row<3 then
-        local bank=(col-8)+(row-1)*8
+        local bank_id=(col-8)+(row-1)*8
         local ins=instrument_list[global_page]
-        params:set(ins.."bank",bank)
+        params:set(ins.."bank",bank_id)
         if time_pressed>0.5 then 
           -- load bank on short press
           bank_load()
@@ -159,6 +168,16 @@ function GGrid:get_visual()
 
   -- illuminate playing button
   self.visual[8][16]=networks[global_page].playing and 10 or 2
+
+  -- illuminate the bank buttons
+  local ins=instrument_list[global_page]
+  for row=1,2 do
+    for col=9,16 do
+      local bank_id=(col-8)+(row-1)*8
+      self.visual[row][col]=#bank[global_page][bank_id]>0 and 10 or 5
+      self.visual[row][col]=self.visual[row][col]+(bank_id==params:get(ins.."bank") and 5 or 0)*blinky
+    end
+  end
 
   return self.visual
 end
