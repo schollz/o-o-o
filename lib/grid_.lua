@@ -50,13 +50,23 @@ function GGrid:grid_key(x,y,z)
 end
 
 function GGrid:key_press(row,col,on)
+  local time_pressed=0
   if on then
-    self.pressed_buttons[row..","..col]=clock.get_beats()
+    self.pressed_buttons[row..","..col]=clock.get_beats()*clock.get_beat_sec()
   else
+    time_pressed=self.pressed_buttons[row..","..col]
+    if time_pressed~=nil then
+      time_pressed=clock.get_beats()*clock.get_beat_sec()-time_pressed
+    else
+      time_pressed=0
+    end
     self.pressed_buttons[row..","..col]=nil
   end
   if col>8 then
     if not on then
+      -- load bank on short press
+
+      -- save bank on long press
       do return end
     end
     if col==9 and row==8 then
