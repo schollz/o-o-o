@@ -90,7 +90,7 @@ function GGrid:key_press(row,col,on)
     elseif col==10 and row==8 then
       global_page=util.clamp(global_page+1,1,#networks)
     elseif col==16 and row==8 then
-      networks[global_page]:toggle_play()
+      params:delta(instrument_list[global_page].."play",1)
     end
     do return end
   end

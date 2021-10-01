@@ -259,8 +259,8 @@ function init()
   parameter_list["Odashodasho"]={"attack_curve","decay_curve","mod_ratio","car_ratio","index","index_scale","noise","noise_attack","noise_decay","eq_freq","eq_db"}
   parameter_list["MxSamples"]={"sample"}
   instrument_list={"lead","pad","bass","kick","snare","hihat"}
-  for _,ins in ipairs(instrument_list) do
-    params:add_group(ins,26)
+  for i,ins in ipairs(instrument_list) do
+    params:add_group(ins,27)
     params:add{type="option",id=ins.."scale_mode",name="scale mode",
       options=scale_names,default=5,
     action=function() generate_scale() end}
@@ -321,6 +321,11 @@ function init()
         end
       end
     }
+    params:add{type='binary',id=ins..'play',name='play',behavior='toggle',
+      action=function(v)
+        networks[i].playing=v==1
+      end
+    }
   end
 
   -- setup networks
@@ -335,7 +340,7 @@ function init()
     networks[i]:set_action(function(nw)
       perform(v,nw,true)
     end)
-    networks[i]:toggle_play()
+    params:delta(v.."play",1)
     networks[i].name=v
   end
 
@@ -584,7 +589,7 @@ function key(k,z)
     elseif k==2 then
       bank_load()
     elseif k==3 then
-      networks[global_page]:toggle_play()
+      params:delta(instrument_list[global_page].."play",1)
       if networks[global_page].playing then
         bank_save()
       end
