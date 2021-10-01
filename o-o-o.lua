@@ -1,4 +1,4 @@
--- o-o-o v0.2.0
+-- o-o-o v0.3.0
 --
 -- connect the dots.
 --
@@ -254,6 +254,7 @@ function init()
     table.insert(scale_names,string.lower(MusicUtil.SCALES[i].name))
   end
   params:add_option("playback","play during playback",{"off","on"},1)
+  params:add_option("record","record each",{"off","on"},1)
   -- setup parameters
   parameter_list={}
   parameter_list["Odashodasho"]={"attack_curve","decay_curve","mod_ratio","car_ratio","index","index_scale","noise","noise_attack","noise_decay","eq_freq","eq_db"}
@@ -489,6 +490,18 @@ function play_note(a)
   a.noise_decay=a.noise_decay or params:get(a.type.."noise_decay")
   -- tab.print(a)
   if engine_loaded=="Odashodasho" then
+    local do_record=params:get("record")==2
+    local record_path=""
+    if do_record then
+      local record_dir="/home/we/dust/audio/o-o-o/"..os.date("%Y%m%d")
+      os.execute("mkdir -p "..record_dir)
+      for i=1,99 do
+        record_path=record_dir.."/"..a.type.."_"..string.format("%02d",i)..".flac"
+        if not util.file_exists(record_path) then
+          break
+        end
+      end
+    end
     engine.fm1(
       a.note,
       a.amp,
@@ -508,7 +521,9 @@ function play_note(a)
       a.noise,
       a.noise_attack,
       a.noise_decay,
-      a.type
+      a.type,
+      do_record and 1 or 0,
+      record_path
     )
   else
     mx:on({

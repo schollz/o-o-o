@@ -8,6 +8,7 @@ Engine_Odashodasho : CroneEngine {
 	var fm1Voices;
 	var fm1DiskBus;
 	var fm1DiskSyn;
+	var fm1DiskBuf;
 	// </Odashodasho>
 	
 	
@@ -21,6 +22,7 @@ Engine_Odashodasho : CroneEngine {
 		fm1Voices=Dictionary.new;
 		fm1DiskBus=Dictionary.new;
 		fm1DiskSyn=Dictionary.new;
+		fm1DiskBuf=Dictionary.new;
 
 		SynthDef("diskout", { arg bufnum=0, inbus=0;
 			DiskOut.ar(bufnum,In.ar(inbus,2));
@@ -103,11 +105,37 @@ Engine_Odashodasho : CroneEngine {
 		fm1Syn=Synth("OdashodashoFX",[\in,fm1Bus],context.server);
 		context.server.sync;
 		
-		this.addCommand("fm1","ifffffffffffffffffs",{ arg msg;
+		this.addCommand("fm1","ifffffffffffffffffsis",{ arg msg;
 			var voice=msg[19];
-			if (fm1DiskBus.at(voice)!=nil,{
+			var record=msg[20];
+			var recordPath=msg[21];
+			if (fm1DiskBus.at(voice)==nil,{
 				fm1DiskBus.put(voice,Bus.audio(context.server,2));
-				// initiate disk syn
+			});
+			if (record>0,{
+				// do record
+				// if not recording, start recording
+				if (fm1DiskSyn.at(voice)==nil,{
+					var b=Buffer.alloc(context.server,65536,2);
+					var pathname=recordPath.asString;
+					("allocating buffer for "++voice++" to "++pathname).postln;
+					b.write(pathname.standardizePath,PathName.new(pathname.standardizePath).extension,"int16",0,0,true);
+					fm1DiskBuf.put(voice,b);
+					fm1DiskSyn.put(voice,Synth.tail(nil,"diskout",
+						[\bufnum,fm1DiskBuf.at(voice),\inbus,fm1DiskBus.at(voice)]
+					));
+					// initiate disk syn
+				});
+			},{
+				// don't record
+				// if recording, free everything
+				if (fm1DiskSyn.at(voice)!=nil,{
+					("stopping recording for "++voice).postln;
+					fm1DiskSyn.at(voice).free;
+					fm1DiskSyn.removeAt(voice);
+					fm1DiskBuf.at(voice).free;
+					fm1DiskBuf.removeAt(voice);
+				});
 			});
 			Synth.before(fm1Syn,"Odashodasho",[
 				\diskout,fm1DiskBus.at(voice),
@@ -148,6 +176,7 @@ Engine_Odashodasho : CroneEngine {
 		fm1Voices.keysValuesDo({ arg key, value; value.free; });
 		fm1DiskBus.keysValuesDo({ arg key, value; value.free; });
 		fm1DiskSyn.keysValuesDo({ arg key, value; value.free; });
+		fm1DiskBuf.keysValuesDo({ arg key, value; value.free; });
 		// </Odashodasho>
 	}
 }
