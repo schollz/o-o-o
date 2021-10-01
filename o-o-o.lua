@@ -65,6 +65,46 @@ patches["lead"]={
   noise_attack=0.01,
   noise_decay=1,
 }
+patches["lead2"]={
+  db=-2,
+  pan=math.random(-50,50)/100,
+  attack=0.01,
+  decay=2,
+  attack_curve=1,
+  decay_curve=-4,
+  mod_ratio=1,
+  car_ratio=1,
+  index=math.random(200,250)/100,
+  index_scale=1.2,
+  send=-18,
+  divs={1/4,1/4,1/8,1/8,1/8,1/8,1/8,1/16},
+  dens={0.5,0.75,0.15,0.25,0.5,0.25,0.75,0.5},
+  eq_freq=650,
+  eq_db=9,
+  noise=-96,
+  noise_attack=0.01,
+  noise_decay=1,
+}
+patches["lead3"]={
+  db=-2,
+  pan=math.random(-50,50)/100,
+  attack=0.01,
+  decay=2,
+  attack_curve=1,
+  decay_curve=-4,
+  mod_ratio=1,
+  car_ratio=1,
+  index=math.random(200,250)/100,
+  index_scale=1.2,
+  send=-18,
+  divs={1/4,1/4,1/8,1/8,1/8,1/8,1/8,1/16},
+  dens={0.5,0.75,0.15,0.25,0.5,0.25,0.75,0.5},
+  eq_freq=650,
+  eq_db=9,
+  noise=-96,
+  noise_attack=0.01,
+  noise_decay=1,
+}
 patches["bass"]={
   db=6,
   attack=0.0,
@@ -177,6 +217,7 @@ function init()
   -- available divisions
   global_div_scales={1/16,1/8,1/4,1/2,1,2,4,8,16}
   global_page=1
+  global_solo=false
   networks={}
   bank={}
 
@@ -259,9 +300,9 @@ function init()
   parameter_list={}
   parameter_list["Odashodasho"]={"attack_curve","decay_curve","mod_ratio","car_ratio","index","index_scale","noise","noise_attack","noise_decay","eq_freq","eq_db"}
   parameter_list["MxSamples"]={"sample"}
-  instrument_list={"lead","pad","bass","kick","snare","hihat"}
+  instrument_list={"lead","pad","bass","kick","snare","hihat","lead2","lead3"}
   for i,ins in ipairs(instrument_list) do
-    params:add_group(ins,27)
+    params:add_group(ins,29)
     params:add{type="option",id=ins.."scale_mode",name="scale mode",
       options=scale_names,default=5,
     action=function() generate_scale() end}
@@ -325,6 +366,17 @@ function init()
     params:add{type='binary',id=ins..'play',name='play',behavior='toggle',
       action=function(v)
         networks[i].playing=v==1
+      end
+    }
+    params:add{type='binary',id=ins..'mute',name='mute',behavior='toggle'}
+    params:add{type='binary',id=ins..'solo',name='solo',behavior='toggle',
+      action=function(v)
+        global_solo=false
+        for _,ins2 in ipairs(instrument_list) do
+          if params:get(ins2.."solo")==1 then
+            global_solo=true
+          end
+        end
       end
     }
   end
@@ -459,6 +511,14 @@ function play_note(a)
   end
   if a.type==nil then
     a.type="lead"
+  end
+  if params:get(a.type.."mute")==1 then
+    do return end
+  end
+  if global_solo then
+    if params:get(a.type.."solo")==0 then
+      do return end
+    end
   end
 
   if a.type=="kick" then
