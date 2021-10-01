@@ -6,6 +6,8 @@ Engine_Odashodasho : CroneEngine {
 	var fm1Bus;
 	var fm1Syn;
 	var fm1Voices;
+	var fm1DiskBus;
+	var fm1DiskSyn;
 	// </Odashodasho>
 	
 	
@@ -17,6 +19,12 @@ Engine_Odashodasho : CroneEngine {
 		
 		// <Odashodasho>
 		fm1Voices=Dictionary.new;
+		fm1DiskBus=Dictionary.new;
+		fm1DiskSyn=Dictionary.new;
+
+		SynthDef("diskout", { arg bufnum=0, inbus=0;
+			DiskOut.ar(bufnum,In.ar(inbus,2));
+		}).add;
 		
 		// initialize synth defs
 		SynthDef("Odashodasho", {
@@ -25,7 +33,7 @@ Engine_Odashodasho : CroneEngine {
 			amp=0.2, atk=0.01, rel=3, pan=0,
 			noise=0.0, natk=0.01, nrel=3,
 			eqFreq=1200,eqDB=0,
-			lpf=20000,
+			lpf=20000, diskout,
 			out=0, fx=0, fxsend=(-25);
 			var car, mod, env, iEnv;
 			
@@ -69,6 +77,7 @@ Engine_Odashodasho : CroneEngine {
 
 			//direct out/reverb send
 			Out.ar(out, car);
+			Out.ar(diskout,car);
 			Out.ar(fx, car * fxsend.dbamp);
 		}).add;
 		
@@ -95,7 +104,13 @@ Engine_Odashodasho : CroneEngine {
 		context.server.sync;
 		
 		this.addCommand("fm1","ifffffffffffffffffs",{ arg msg;
+			var voice=msg[19];
+			if (fm1DiskBus.at(voice)!=nil,{
+				fm1DiskBus.put(voice,Bus.audio(context.server,2));
+				// initiate disk syn
+			});
 			Synth.before(fm1Syn,"Odashodasho",[
+				\diskout,fm1DiskBus.at(voice),
 				\freq,msg[1].midicps,
 				\amp,msg[2],
 				\pan,msg[3],
@@ -118,7 +133,7 @@ Engine_Odashodasho : CroneEngine {
 				\fx,fm1Bus,
 			]).onFree({
 				NetAddr("127.0.0.1",10111)
-					.sendMsg("odashodasho_voice",msg[19]++" "++msg[1],0);
+					.sendMsg("odashodasho_voice",voice++" "++msg[1],0);
 			})
 			// NodeWatcher.register(fm1Voices.at(fullname));
 		});
@@ -131,6 +146,8 @@ Engine_Odashodasho : CroneEngine {
 		fm1Bus.free;
 		fm1Syn.free;
 		fm1Voices.keysValuesDo({ arg key, value; value.free; });
+		fm1DiskBus.keysValuesDo({ arg key, value; value.free; });
+		fm1DiskSyn.keysValuesDo({ arg key, value; value.free; });
 		// </Odashodasho>
 	}
 }
