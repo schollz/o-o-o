@@ -90,7 +90,7 @@ function GGrid:key_press(row,col,on)
     elseif col==10 and row==8 then
       global_page=util.clamp(global_page+1,1,#networks)
     elseif col==16 and row==8 then
-      networks[global_page]:toggle_play()
+      params:delta(instrument_list[global_page].."play",1)
     end
     do return end
   end
@@ -102,6 +102,12 @@ function GGrid:key_press(row,col,on)
     table.insert(buttons,{v,tonumber(row),tonumber(col)})
   end
   -- make a connection between the two pressed buttons
+  if #buttons==1 then
+    -- play the button
+    local i=networks[global_page].rowcol_to_i[buttons[1][2]][buttons[1][3]]
+    networks[global_page].pos=i
+    perform(instrument_list[global_page],networks[global_page]:current_nw(),networks[global_page].playing==false or params:get("playback")==2)
+  end
   if #buttons~=2 then
     do return end
   end

@@ -1,4 +1,4 @@
--- o-o-o v0.2.0
+-- o-o-o v0.3.0
 --
 -- connect the dots.
 --
@@ -17,7 +17,7 @@
 -- K1+K2 loads current bank
 -- K1+E1 changes volume
 -- K1+E2 changes current bank
--- K1+E3 adds random (cw) 
+-- K1+E3 adds random (cw)
 --       or removes last (ccw)
 
 -- keep track of which keys are down
@@ -253,13 +253,14 @@ function init()
   for i=1,#MusicUtil.SCALES do
     table.insert(scale_names,string.lower(MusicUtil.SCALES[i].name))
   end
+  params:add_option("playback","play during playback",{"off","on"},1)
   -- setup parameters
   parameter_list={}
   parameter_list["Odashodasho"]={"attack_curve","decay_curve","mod_ratio","car_ratio","index","index_scale","noise","noise_attack","noise_decay","eq_freq","eq_db"}
   parameter_list["MxSamples"]={"sample"}
   instrument_list={"lead","pad","bass","kick","snare","hihat"}
-  for _,ins in ipairs(instrument_list) do
-    params:add_group(ins,26)
+  for i,ins in ipairs(instrument_list) do
+    params:add_group(ins,27)
     params:add{type="option",id=ins.."scale_mode",name="scale mode",
       options=scale_names,default=5,
     action=function() generate_scale() end}
@@ -320,12 +321,16 @@ function init()
         end
       end
     }
+    params:add{type='binary',id=ins..'play',name='play',behavior='toggle',
+      action=function(v)
+        networks[i].playing=v==1
+      end
+    }
   end
 
   -- setup networks
   -- local pad_cols={{2,2},{2,2},{2,3},{2,3},{3,2},{3,2},{3,1},{1,3}}
   generate_scale()
-  local pad_cols={{2,2},{2,3},{3,2},{3,1},{2,2},{2,3},{3,2},{1,3}}
   for i,v in ipairs(instrument_list) do
     bank[i]={}
     for j=1,16 do
@@ -333,25 +338,9 @@ function init()
     end
     networks[i]=Network:new({divs=patches[v].divs,dens=patches[v].dens,id=i})
     networks[i]:set_action(function(nw)
-      if v=="pad" then
-        -- play three notes
-        local notes={9-nw.row}
-        table.insert(notes,notes[1]+pad_cols[nw.col][1])
-        table.insert(notes,notes[2]+pad_cols[nw.col][2])
-        for _,note in ipairs(notes) do
-          note=global_scales[v][note]
-          local attack=params:get(v.."attack")*clock.get_beat_sec()*1*nw.div
-          local decay=params:get(v.."decay")*clock.get_beat_sec()*1*nw.div
-          play_note({note=note,pan=(note%12)/12-0.5,type=v,decay=decay,attack=attack})
-        end
-      else
-        local note=global_scales[v][nw.id]
-        local attack=params:get(v.."attack")*clock.get_beat_sec()*16*nw.div
-        local decay=params:get(v.."decay")*clock.get_beat_sec()*16*nw.div
-        play_note({amp=nw.amp,note=note,pan=nw.pan,type=v,attack=attack,decay=decay})
-      end
+      perform(v,nw,true)
     end)
-    networks[i]:toggle_play()
+    params:delta(v.."play",1)
     networks[i].name=v
   end
 
@@ -408,6 +397,30 @@ function init()
 
   -- update parameters menu
   update_engine()
+end
+
+function perform(v,nw,do_perform)
+  if not do_perform then
+    do return end
+  end
+  if v=="pad" then
+    local pad_cols={{2,2},{2,3},{3,2},{3,1},{2,2},{2,3},{3,2},{1,3}}
+    -- play three notes
+    local notes={9-nw.row}
+    table.insert(notes,notes[1]+pad_cols[nw.col][1])
+    table.insert(notes,notes[2]+pad_cols[nw.col][2])
+    for _,note in ipairs(notes) do
+      note=global_scales[v][note]
+      local attack=params:get(v.."attack")*clock.get_beat_sec()*1*nw.div
+      local decay=params:get(v.."decay")*clock.get_beat_sec()*1*nw.div
+      play_note({note=note,pan=(note%12)/12-0.5,type=v,decay=decay,attack=attack})
+    end
+  else
+    local note=global_scales[v][nw.id]
+    local attack=params:get(v.."attack")*clock.get_beat_sec()*16*nw.div
+    local decay=params:get(v.."decay")*clock.get_beat_sec()*16*nw.div
+    play_note({amp=nw.amp,note=note,pan=nw.pan,type=v,attack=attack,decay=decay})
+  end
 end
 
 function update_engine()
@@ -576,7 +589,7 @@ function key(k,z)
     elseif k==2 then
       bank_load()
     elseif k==3 then
-      networks[global_page]:toggle_play()
+      params:delta(instrument_list[global_page].."play",1)
       if networks[global_page].playing then
         bank_save()
       end
@@ -587,6 +600,7 @@ function key(k,z)
       networks[global_page]:disconnect()
     elseif k==3 then
       networks[global_page]:connect()
+      perform(instrument_list[global_page],networks[global_page]:current_nw(),networks[global_page].playing==false or params:get("playback")==2)
     end
   end
 end

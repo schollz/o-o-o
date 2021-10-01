@@ -158,6 +158,10 @@ function Network:networked(i)
   return r
 end
 
+function Network:current_nw()
+  return self.nw[self.pos]
+end
+
 function Network:randomize(d)
   if d>0 then
     -- add random connection
@@ -364,20 +368,26 @@ function Network:draw()
       screen.fill()
     end
     if self.pos==i then
-      screen.level(15)
+      screen.level(self.pos_hold and 15 or 4)
       screen.circle(x,y,4)
       screen.stroke()
     end
   end
 
   if keydown[1] then
-    screen.level(15)
-    local help={{"k3","link"},{"k2","unlink"},{"k1+e2","bank "..math.floor(params:get(instrument_list[global_page].."bank"))},{"k1+k2","load"}}
+    local bank_id=params:get(instrument_list[global_page].."bank")
+    local help={{"k3","link"},{"k2","unlink"},{"k1+e2","bank "..math.floor(bank_id)},{"k1+k2","load"}}
     local y=7
     for _,h in ipairs(help) do
+      screen.level(15)
       screen.move(1,y)
       screen.text(h[1])
       y=y+7
+      if h[1]=="k1+e2" then
+        screen.level(bank[global_page][bank_id].saved and 15 or 2)
+      else
+        screen.level(15)
+      end
       screen.move(5,y)
       screen.text(h[2])
       y=y+8
