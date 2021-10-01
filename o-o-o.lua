@@ -1,4 +1,4 @@
--- o-o-o v0.3.0
+-- o-o-o v0.2.0
 --
 -- connect the dots.
 --
