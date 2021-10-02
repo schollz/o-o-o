@@ -91,8 +91,6 @@ function GGrid:key_press(row,col,on)
     elseif row==7 then
       params:delta(instrument_list[page].."play",1)
     elseif row==6 then
-      params:delta(instrument_list[page].."mute",1)
-    elseif row==5 then
       params:delta(instrument_list[page].."solo",1)
     end
     do return end
@@ -172,16 +170,9 @@ function GGrid:get_visual()
     self.visual[row][col]=(i==global_page and 4 or 2)
   end
 
-  -- illuminate mute buttons
-  for i=1,8 do
-    local row=6
-    local col=i+8
-    self.visual[row][col]=(params:get(instrument_list[i].."mute")==1 and 4 or 2)
-  end
-
   -- illuminate solo buttons
   for i=1,8 do
-    local row=5
+    local row=6
     local col=i+8
     self.visual[row][col]=(params:get(instrument_list[i].."solo")==1 and 4 or 2)
   end

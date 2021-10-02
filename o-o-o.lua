@@ -368,7 +368,6 @@ function init()
         networks[i].playing=v==1
       end
     }
-    params:add{type='binary',id=ins..'mute',name='mute',behavior='toggle'}
     params:add{type='binary',id=ins..'solo',name='solo',behavior='toggle',
       action=function(v)
         global_solo=false
@@ -511,9 +510,6 @@ function play_note(a)
   end
   if a.type==nil then
     a.type="lead"
-  end
-  if params:get(a.type.."mute")==1 then
-    do return end
   end
   if global_solo then
     if params:get(a.type.."solo")==0 then
