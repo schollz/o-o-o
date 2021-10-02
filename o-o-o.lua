@@ -67,7 +67,7 @@ patches["lead"]={
   noise_attack=0.01,
   noise_decay=1,
   sample_file=_path.audio.."o-o-o/samples/music_box_c4.wav",
-  sample_note=60,
+  sample_note=72,
 }
 patches["lead2"]={
   db=-2,
@@ -89,7 +89,7 @@ patches["lead2"]={
   noise_attack=0.01,
   noise_decay=1,
   sample_file=_path.audio.."o-o-o/samples/music_box_c4.wav",
-  sample_note=60,
+  sample_note=72,
 }
 patches["bass"]={
   db=6,
@@ -201,7 +201,7 @@ patches["pad"]={
   noise_decay=1,
   root_note=60-12,
   sample_file=_path.audio.."o-o-o/samples/music_box_c4.wav",
-  sample_note=60,
+  sample_note=72,
 }
 patches["pad2"]={
   db=-10,
@@ -227,7 +227,7 @@ patches["pad2"]={
   noise_decay=1,
   root_note=60-12,
   sample_file=_path.audio.."o-o-o/samples/music_box_c4.wav",
-  sample_note=60,
+  sample_note=72,
 }
 
 function init()
