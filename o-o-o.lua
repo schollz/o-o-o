@@ -40,7 +40,7 @@ if util.file_exists(_path.code.."mx.samples") then
 end
 uimessage=""
 
-local save_params={"scale_mode","root_note","attack","decay","attack_curve","decay_curve","mod_ratio","car_ratio","index","index_scale","sample","reverb","eq_freq","eq_db","lpf","noise","noise_attack","noise_attack","noise_decay","div_scale"}
+local save_params={"scale_mode","root_note","attack","decay","attack_curve","decay_curve","mod_ratio","car_ratio","index","index_scale","instrument","reverb","eq_freq","eq_db","lpf","noise","noise_attack","noise_attack","noise_decay","div_scale"}
 
 -- define patches
 patches={}
@@ -299,7 +299,7 @@ function init()
   -- setup parameters
   parameter_list={}
   parameter_list["Odashodasho"]={"attack_curve","decay_curve","mod_ratio","car_ratio","index","index_scale","noise","noise_attack","noise_decay","eq_freq","eq_db"}
-  parameter_list["MxSamples"]={"sample"}
+  parameter_list["MxSamples"]={"instrument"}
   instrument_list={"lead","pad","bass","kick","snare","hihat","lead2","lead3"}
   for i,ins in ipairs(instrument_list) do
     params:add_group(ins,29)
@@ -313,7 +313,7 @@ function init()
       local val=math.floor(util.linlin(0,1,v.controlspec.minval,v.controlspec.maxval,v.raw)*10)/10
       return ((val<0) and "" or "+")..val.." dB"
     end}
-    params:add{type="option",id=ins.."sample",name="sample",options=mx_instrument_list,default=1}
+    params:add{type="option",id=ins.."instrument",name="instrument",options=mx_instrument_list,default=1}
     params:add{type="control",id=ins.."attack",name="attack",controlspec=controlspec.new(0,8,'lin',0.01,patches[ins].attack,'beats',0.01/8)}
     params:add{type="control",id=ins.."decay",name="decay",controlspec=controlspec.new(0,8,'lin',0.01,patches[ins].decay,'beats',0.01/8)}
     params:add{type="control",id=ins.."attack_curve",name="attack curve",controlspec=controlspec.new(-8,8,'lin',1,patches[ins].attack_curve,'',1/16)}
@@ -558,32 +558,45 @@ function play_note(a)
         end
       end
     end
-    engine.fm1(
-      a.note,
-      a.amp,
-      a.pan,
-      a.attack,
-      a.decay,
-      a.attack_curve,
-      a.decay_curve,
-      a.mod_ratio,
-      a.car_ratio,
-      a.index,
-      a.index_scale,
-      a.send,
-      a.eq_freq,
-      a.eq_db,
-      a.lpf,
-      a.noise,
-      a.noise_attack,
-      a.noise_decay,
-      a.type,
-      do_record and 1 or 0,
-      record_path
-    )
+    if string.find(a.type,"instrument") then
+      engine.fm1sample(
+        a.sample,
+        a.start,
+        a.amp,
+        a.pan,
+        a.attack,
+        a.decay,
+        1,
+        a.send
+      )
+    else
+      engine.fm1(
+        a.note,
+        a.amp,
+        a.pan,
+        a.attack,
+        a.decay,
+        a.attack_curve,
+        a.decay_curve,
+        a.mod_ratio,
+        a.car_ratio,
+        a.index,
+        a.index_scale,
+        a.send,
+        a.eq_freq,
+        a.eq_db,
+        a.lpf,
+        a.noise,
+        a.noise_attack,
+        a.noise_decay,
+        a.type,
+        do_record and 1 or 0,
+        record_path
+      )
+    end
   else
     mx:on({
-      name=mx_instrument_list[params:get(a.type.."sample")],
+      name=mx_instrument_list[params:get(a.type.."instrument")],
       midi=a.note,
       velocity=80,
       amp=a.amp,
@@ -704,7 +717,7 @@ function redraw()
     screen.move(128,60)
     if networks[global_page].name~=nil then
       if engine_loaded=="MxSamples" then
-        screen.text_right(mx_instrument_list[params:get(instrument_list[global_page].."sample")])
+        screen.text_right(mx_instrument_list[params:get(instrument_list[global_page].."instrument")])
       else
         screen.text_right(networks[global_page].name)
       end
