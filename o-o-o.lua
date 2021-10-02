@@ -31,6 +31,7 @@ json=require("cjson")
 include("o-o-o/lib/utils")
 local er=include("o-o-o/lib/er")
 local Lattice=require("lattice")
+local Intonation=require("intonation")
 local MusicUtil=require("musicutil")
 local Network=include("o-o-o/lib/network")
 local Gridd=include("o-o-o/lib/grid_")
@@ -41,7 +42,8 @@ end
 uimessage=""
 
 local save_params={"scale_mode","root_note","attack","decay","attack_curve","decay_curve","mod_ratio","car_ratio","index","index_scale","instrument","reverb","eq_freq","eq_db","lpf","noise","noise_attack","noise_attack","noise_decay","div_scale"}
-
+local normal_intonation=Intonation.normal()
+tab.print(normal_intonation)
 -- define patches
 patches={}
 -- https://sccode.org/1-5bA
@@ -568,15 +570,15 @@ function play_note(a)
     if string.find(a.type,"sample") then
       engine.fm1sample(
         a.note,
-        "/home/we/dust/code/o-o-o/lib/yeahyeah.wav",
-        (a.id-1)/63,
+        "/home/we/dust/code/o-o-o/lib/footsteps008.wav",
+        0,
         a.amp,
         a.pan,
         a.attack,
         a.decay,
         a.attack_curve,
         a.decay_curve,
-        1,
+        normal_intonation[a.note%12+1],
         a.send,
         a.eq_freq,
         a.eq_db,
