@@ -302,11 +302,11 @@ function init()
   params:add_option("record","record each",{"off","on"},1)
   -- setup parameters
   parameter_list={}
-  parameter_list["Odashodasho"]={"attack_curve","decay_curve","mod_ratio","car_ratio","index","index_scale","noise","noise_attack","noise_decay","eq_freq","eq_db"}
+  parameter_list["Odashodasho"]={"sample_file","sound","attack_curve","decay_curve","mod_ratio","car_ratio","index","index_scale","noise","noise_attack","noise_decay","eq_freq","eq_db"}
   parameter_list["MxSamples"]={"instrument"}
   instrument_list={"sample1","sample2","lead","pad","bass","kick","snare","hihat"}
   for i,ins in ipairs(instrument_list) do
-    params:add_group(ins,28)
+    params:add_group(ins,30)
     params:add{type="option",id=ins.."scale_mode",name="scale mode",
       options=scale_names,default=5,
     action=function() generate_scale() end}
@@ -324,7 +324,28 @@ function init()
     params:add{type="control",id=ins.."decay_curve",name="decay curve",controlspec=controlspec.new(-8,8,'lin',1,patches[ins].decay_curve,'',1/16)}
 
     -- sample
-
+    params:add{type="option",id=ins.."sound",name="sound",options={"fm","sample"},default=1,action=function(v)
+      local fm_specific={"mod_ratio","car_ratio","index","index_scale","noise","noise_attack","noise_decay"}
+      local sample_specific={"sample_file"}
+      if v==2 then
+        for _,p in ipairs(fm_specific) do
+          params:hide(ins..p)
+        end
+        for _,p in ipairs(sample_specific) do
+          params:show(ins..p)
+        end
+      else
+        for _,p in ipairs(sample_specific) do
+          params:hide(ins..p)
+        end
+        for _,p in ipairs(fm_specific) do
+          params:show(ins..p)
+        end
+      end
+      _menu.rebuild_params()
+    end}
+    params:add_file(ins.."sample_file","sample file","/home/we/dust/audio")
+    params:hide(ins.."sample_file")
     -- fm
     params:add{type="control",id=ins.."mod_ratio",name="mod ratio",controlspec=controlspec.new(0,8,'lin',0.01,patches[ins].mod_ratio,'x',0.01/8)}
     params:add{type="control",id=ins.."car_ratio",name="car ratio",controlspec=controlspec.new(0,50,'lin',0.01,patches[ins].car_ratio,'x',0.01/50)}
@@ -567,7 +588,7 @@ function play_note(a)
         end
       end
     end
-    if string.find(a.type,"sample") or string.find(a.type,"pad") then
+    if string.find(a.type,"sample") then
       engine.fm1sample(
         a.note,
         "/home/we/dust/code/o-o-o/lib/48.2.3.1.0.wav",
