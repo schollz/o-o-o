@@ -9,6 +9,7 @@ Engine_Odashodasho : CroneEngine {
 	var fm1DiskBus;
 	var fm1DiskSyn;
 	var fm1DiskBuf;
+	var fm1SampleBuf;
 	// </Odashodasho>
 	
 	
@@ -23,6 +24,46 @@ Engine_Odashodasho : CroneEngine {
 		fm1DiskBus=Dictionary.new;
 		fm1DiskSyn=Dictionary.new;
 		fm1DiskBuf=Dictionary.new;
+
+		SynthDef("fm1Samples", {
+			arg out=0, fx=0, fxsend=0, 
+			bufnum=0, amp=0.5, rate=1, 
+			start=0, end=1, atk=0, rel=2, pan=0;
+			var snd,frames, duration, env, pos;
+
+			rate = rate*BufRateScale.kr(bufnum);
+			frames = BufFrames.kr(bufnum);
+
+			// envelope to clamp looping
+			env=EnvGen.ar(
+				Env.new(
+					levels: [0,1,1,0],
+					times: [atk,rel-0.05,0.05],
+				),
+			);
+
+			pos=Phasor.ar(
+				trig:1,
+				rate:rate,
+				start:(((rate>0)*start)+((rate<0)*end))*frames,
+				end:(((rate>0)*end)+((rate<0)*start))*frames,
+				resetPos:(((rate>0)*start)+((rate<0)*end))*frames,
+			);
+			snd=BufRd.ar(
+				numChannels:BufChannels.ir(bufnum),
+				bufnum:bufnum,
+				phase:pos,
+				interpolation:4,
+			);
+
+			snd = snd * env * amp;
+
+			DetectSilence.ar(snd,doneAction:2);
+
+			snd = Pan2.ar(snd, pan);
+			Out.ar(fx, snd * fxsend.dbamp);
+			Out.ar(out,snd);
+		}).add;
 
 		SynthDef("diskout", { arg bufnum=0, inbus=0;
 			DiskOut.ar(bufnum,In.ar(inbus,2));
@@ -105,6 +146,49 @@ Engine_Odashodasho : CroneEngine {
 		fm1Syn=Synth("OdashodashoFX",[\in,fm1Bus],context.server);
 		context.server.sync;
 		
+		this.addCommand("fm1sample","sffffffs",{
+			arg msg;
+			var voice=msg[8];
+			var sample=msg[1];
+			if (fm1SampleBuf.at(sample)==nil,{
+				arg bufnum;
+				fm1DiskBuf.put(sample,Buffer.read(context.server,sample,action:{
+					arg bufnum;
+					Synth.before(fm1Syn,"fm1Samples",[
+						// \diskout,fm1DiskBus.at(voice),
+						\bufnum,bufnum,
+						\start,msg[2],
+						\amp,msg[3],
+						\pan,msg[4],
+						\atk,msg[5],
+						\rel,msg[6],
+						\rate,msg[7],
+						\out,0,
+						\fx,fm1Bus,
+					]).onFree({
+						NetAddr("127.0.0.1",10111)
+							.sendMsg("odashodasho_voice",voice++" 1",0);
+					});	
+				}));
+			},{
+				Synth.before(fm1Syn,"fm1Samples",[
+					// \diskout,fm1DiskBus.at(voice),
+					\bufnum,fm1DiskBus.at(sample),
+					\start,msg[2],
+					\amp,msg[3],
+					\pan,msg[4],
+					\atk,msg[5],
+					\rel,msg[6],
+					\rate,msg[7],
+					\out,0,
+					\fx,fm1Bus,
+				]).onFree({
+					NetAddr("127.0.0.1",10111)
+						.sendMsg("odashodasho_voice",voice++" 1",0);
+				});	
+			})
+		});
+
 		this.addCommand("fm1","ifffffffffffffffffsis",{ arg msg;
 			var voice=msg[19];
 			var record=msg[20];
@@ -162,7 +246,7 @@ Engine_Odashodasho : CroneEngine {
 			]).onFree({
 				NetAddr("127.0.0.1",10111)
 					.sendMsg("odashodasho_voice",voice++" "++msg[1],0);
-			})
+			});
 			// NodeWatcher.register(fm1Voices.at(fullname));
 		});
 		// </Odashodasho>
