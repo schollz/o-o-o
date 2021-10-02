@@ -28,3 +28,10 @@ function perpendicular_points(p1,p2,d)
   p3[i][2]=p3[i][2]+factor*(p2[1]-p1[1])
   return p3[2],p3[1]
 end
+
+function is_dir(path)
+  local f=io.open(path,"r")
+  local ok,err,code=f:read(1)
+  f:close()
+  return code==21
+end

@@ -47,49 +47,27 @@ tab.print(normal_intonation)
 -- define patches
 patches={}
 -- https://sccode.org/1-5bA
-patches["sample1"]={
-  db=-2,
-  pan=math.random(-50,50)/100,
-  attack=0.01,
-  decay=2,
-  attack_curve=1,
-  decay_curve=-4,
-  mod_ratio=1,
-  car_ratio=1,
-  index=math.random(200,250)/100,
-  index_scale=1.2,
-  send=-18,
-  divs={1/8,1/8,1/8,1/8,1/8,1/8,1/8,1/8},
-  dens={0.5,0.75,0.15,0.25,0.5,0.25,0.75,0.5},
-  eq_freq=650,
-  eq_db=9,
-  noise=-96,
-  noise_attack=0.01,
-  noise_decay=1,
-  sample="/home/we/dust/code/o-o-o/lib/yeahyeah.wav",
-}
-patches["sample2"]={
-  db=-2,
-  pan=math.random(-50,50)/100,
-  attack=0.01,
-  decay=2,
-  attack_curve=1,
-  decay_curve=-4,
-  mod_ratio=1,
-  car_ratio=1,
-  index=math.random(200,250)/100,
-  index_scale=1.2,
-  send=-18,
-  divs={1/8,1/8,1/8,1/8,1/8,1/8,1/8,1/8},
-  dens={0.5,0.75,0.15,0.25,0.5,0.25,0.75,0.5},
-  eq_freq=650,
-  eq_db=9,
-  noise=-96,
-  noise_attack=0.01,
-  noise_decay=1,
-  sample="/home/we/dust/code/o-o-o/lib/yeahyeah.wav",
-}
 patches["lead"]={
+  db=-2,
+  pan=math.random(-50,50)/100,
+  attack=0.01,
+  decay=2,
+  attack_curve=1,
+  decay_curve=-4,
+  mod_ratio=1,
+  car_ratio=1,
+  index=math.random(200,250)/100,
+  index_scale=1.2,
+  send=-18,
+  divs={1/4,1/4,1/8,1/8,1/8,1/8,1/8,1/16},
+  dens={0.5,0.75,0.15,0.25,0.5,0.25,0.75,0.5},
+  eq_freq=650,
+  eq_db=9,
+  noise=-96,
+  noise_attack=0.01,
+  noise_decay=1,
+}
+patches["lead2"]={
   db=-2,
   pan=math.random(-50,50)/100,
   attack=0.01,
@@ -214,6 +192,30 @@ patches["pad"]={
   noise_decay=1,
   root_note=60-12,
 }
+patches["pad2"]={
+  db=-10,
+  pan=0,
+  attack=0.01,
+  decay=2,
+  attack_curve=0,
+  decay_curve=0,
+  mod_ratio=2,
+  car_ratio=1,
+  index=1.0,
+  -- mod_ratio=1,
+  -- car_ratio=1,
+  -- index=1.5,
+  index_scale=4,
+  send=-15,
+  divs={2,2,2,2,1,1,1,1},
+  dens={1,1,1,1,1,1,1,1},
+  eq_freq=800,
+  eq_db=10,
+  noise=-96,
+  noise_attack=0.01,
+  noise_decay=1,
+  root_note=60-12,
+}
 
 function init()
   -- engine.name="Odashodasho"
@@ -304,9 +306,15 @@ function init()
   parameter_list={}
   parameter_list["Odashodasho"]={"sample_file","sound","attack_curve","decay_curve","mod_ratio","car_ratio","index","index_scale","noise","noise_attack","noise_decay","eq_freq","eq_db"}
   parameter_list["MxSamples"]={"instrument"}
-  instrument_list={"sample1","sample2","lead","pad","bass","kick","snare","hihat"}
+  instrument_list={"lead","pad","bass","kick","snare","hihat","lead2","pad2"}
   for i,ins in ipairs(instrument_list) do
     params:add_group(ins,30)
+    params:add{type="option",id=ins.."sound",name="sound",options={"fm","sample"},default=1,action=function(v)
+      rebuild_menu(ins,v)
+    end}
+    -- sample
+    params:add_file(ins.."sample_file","sample file","/home/we/dust/audio/")
+    params:hide(ins.."sample_file")
     params:add{type="option",id=ins.."scale_mode",name="scale mode",
       options=scale_names,default=5,
     action=function() generate_scale() end}
@@ -323,29 +331,6 @@ function init()
     params:add{type="control",id=ins.."attack_curve",name="attack curve",controlspec=controlspec.new(-8,8,'lin',1,patches[ins].attack_curve,'',1/16)}
     params:add{type="control",id=ins.."decay_curve",name="decay curve",controlspec=controlspec.new(-8,8,'lin',1,patches[ins].decay_curve,'',1/16)}
 
-    -- sample
-    params:add{type="option",id=ins.."sound",name="sound",options={"fm","sample"},default=1,action=function(v)
-      local fm_specific={"mod_ratio","car_ratio","index","index_scale","noise","noise_attack","noise_decay"}
-      local sample_specific={"sample_file"}
-      if v==2 then
-        for _,p in ipairs(fm_specific) do
-          params:hide(ins..p)
-        end
-        for _,p in ipairs(sample_specific) do
-          params:show(ins..p)
-        end
-      else
-        for _,p in ipairs(sample_specific) do
-          params:hide(ins..p)
-        end
-        for _,p in ipairs(fm_specific) do
-          params:show(ins..p)
-        end
-      end
-      _menu.rebuild_params()
-    end}
-    params:add_file(ins.."sample_file","sample file","/home/we/dust/audio")
-    params:hide(ins.."sample_file")
     -- fm
     params:add{type="control",id=ins.."mod_ratio",name="mod ratio",controlspec=controlspec.new(0,8,'lin',0.01,patches[ins].mod_ratio,'x',0.01/8)}
     params:add{type="control",id=ins.."car_ratio",name="car ratio",controlspec=controlspec.new(0,50,'lin',0.01,patches[ins].car_ratio,'x',0.01/50)}
@@ -479,6 +464,30 @@ function init()
 
   -- update parameters menu
   update_engine()
+  for _,ins in ipairs(instrument_list) do
+    rebuild_menu(ins,1)
+  end
+end
+
+function rebuild_menu(ins,v)
+  local fm_specific={"mod_ratio","car_ratio","index","index_scale","noise","noise_attack","noise_decay"}
+  local sample_specific={"sample_file"}
+  if v==2 then
+    for _,p in ipairs(fm_specific) do
+      params:hide(ins..p)
+    end
+    for _,p in ipairs(sample_specific) do
+      params:show(ins..p)
+    end
+  else
+    for _,p in ipairs(sample_specific) do
+      params:hide(ins..p)
+    end
+    for _,p in ipairs(fm_specific) do
+      params:show(ins..p)
+    end
+  end
+  _menu.rebuild_params()
 end
 
 function perform(v,nw,do_perform)
@@ -588,10 +597,15 @@ function play_note(a)
         end
       end
     end
-    if string.find(a.type,"sample") then
+    if params:get(a.type.."sound")==2 then
+      local sample=params:get(a.type.."sample_file")
+      if is_dir(sample) then
+        print("not a valid file: "..sample)
+        do return end
+      end
       engine.fm1sample(
         a.note,
-        "/home/we/dust/code/o-o-o/lib/48.2.3.1.0.wav",
+        sample,
         0,
         a.amp,
         a.pan,
