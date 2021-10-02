@@ -400,7 +400,7 @@ function init()
     }
     params:add{type='binary',id=ins..'play',name='play',behavior='toggle',
       action=function(v)
-        networks[i].playing=v==1
+        networks[i]:toggle_play(v==1)
       end
     }
     params:add{type='binary',id=ins..'solo',name='solo',behavior='toggle',
@@ -710,8 +710,10 @@ function generate_scale()
       -- root=root+12
     end
     global_scales[ins]=scale
+    if string.find(ins,"pad") then 
+      global_scales[ins]=MusicUtil.generate_scale_of_length(params:get(ins.."root_note"),params:get(ins.."scale_mode"),24)
+    end
   end
-  global_scales["pad"]=MusicUtil.generate_scale_of_length(params:get("padroot_note"),params:get("padscale_mode"),24)
   -- for i=1,4 do
   --   for _,note in ipairs(MusicUtil.generate_scale_of_length(root,5,8)) do
   --     table.insert(note_list,note)
