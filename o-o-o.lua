@@ -306,7 +306,7 @@ function init()
   parameter_list["MxSamples"]={"instrument"}
   instrument_list={"sample1","sample2","lead","pad","bass","kick","snare","hihat"}
   for i,ins in ipairs(instrument_list) do
-    params:add_group(ins,29)
+    params:add_group(ins,28)
     params:add{type="option",id=ins.."scale_mode",name="scale mode",
       options=scale_names,default=5,
     action=function() generate_scale() end}
@@ -567,10 +567,10 @@ function play_note(a)
         end
       end
     end
-    if string.find(a.type,"sample") then
+    if string.find(a.type,"sample") or string.find(a.type,"pad") then
       engine.fm1sample(
         a.note,
-        "/home/we/dust/code/o-o-o/lib/footsteps008.wav",
+        "/home/we/dust/code/o-o-o/lib/48.2.3.1.0.wav",
         0,
         a.amp,
         a.pan,
@@ -610,7 +610,7 @@ function play_note(a)
         record_path
       )
     end
-  else
+  elseif engine_loaded=="MxSamples" then
     mx:on({
       name=mx_instrument_list[params:get(a.type.."instrument")],
       midi=a.note,

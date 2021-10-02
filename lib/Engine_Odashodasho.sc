@@ -29,65 +29,35 @@ Engine_Odashodasho : CroneEngine {
 		fm1SampleSyn=Dictionary.new;
 
 		SynthDef("fm1Samples", {
-			arg out=0, bufnum=0, rate=1, rateLag=0,start=0, end=1, reset=0, t_trig=1,
+			arg out=0, bufnum=0, loop=0, rate=1, rateLag=0,start=0, end=1, reset=0, t_trig=1,
 			atk=0,rel=1, cAtk=4, cRel=(-4), amp=0.5,eqFreq=1200,eqDB=0,
 			lpf=20000, diskout,fxsend=0,fx=0, pan=0;
 			var snd,snd2,pos,pos2,frames,env;
 			var startA,endA,startB,endB,resetA,resetB,crossfade,aOrB;
 
-			// latch to change trigger between the two
-			aOrB=ToggleFF.kr(t_trig);
-			startA=Latch.kr(start,aOrB);
-			endA=Latch.kr(end,aOrB);
-			resetA=Latch.kr(reset,aOrB);
-			startB=Latch.kr(start,1-aOrB);
-			endB=Latch.kr(end,1-aOrB);
-			resetB=Latch.kr(reset,1-aOrB);
-			crossfade=Lag.ar(K2A.ar(aOrB),0.05);
-
-
-			rate = Lag.kr(rate,rateLag);
-			rate = rate*BufRateScale.kr(bufnum);
-			frames = BufFrames.kr(bufnum);
+			frames = BufFrames.ir(bufnum);
 			env = EnvGen.ar(Env.perc(atk,rel,curve:[cAtk,cRel]),gate:t_trig,doneAction:2);
-
-			pos=Phasor.ar(
-				trig:aOrB,
-				rate:rate,
-				start:(((rate>0)*startA)+((rate<0)*endA))*frames,
-				end:(((rate>0)*endA)+((rate<0)*startA))*frames,
-				resetPos:(((rate>0)*resetA)+((rate<0)*endA))*frames,
-			);
-			snd=BufRd.ar(
-				numChannels:2,
+				
+				// playbuf
+			snd = PlayBuf.ar(
+				numChannels:2, 
 				bufnum:bufnum,
-				phase:pos,
-				interpolation:4,
+				rate:rate*BufRateScale.kr(bufnum),
+				startPos: ((start*(rate>0))*(frames))+(end*frames*(rate<0)),
+				trigger:t_trig,
+				loop:loop,
+				doneAction:2,
 			);
 
-			// add a second reader
-			pos2=Phasor.ar(
-				trig:(1-aOrB),
-				rate:rate,
-				start:(((rate>0)*startB)+((rate<0)*endB))*frames,
-				end:(((rate>0)*endB)+((rate<0)*startB))*frames,
-				resetPos:(((rate>0)*resetB)+((rate<0)*endB))*frames,
-			);
-			snd2=BufRd.ar(
-				numChannels:2,
-				bufnum:bufnum,
-				phase:pos2,
-				interpolation:4,
-			);
-
-			snd=(crossfade*snd)+((1-crossfade)*snd2);
-			snd=snd*env*amp;
+			snd=snd*env*amp/10;
 
 			// add some boost
 			snd=BPeakEQ.ar(snd,eqFreq,0.5,eqDB);
 			
 			// low-pass filter
 			snd=LPF.ar(snd,lpf);
+
+			DetectSilence.ar(snd,doneAction:2);
 
 			snd = Pan2.ar(snd, pan);
 			Out.ar(fx, snd * fxsend.dbamp);
@@ -182,35 +152,9 @@ Engine_Odashodasho : CroneEngine {
 			if (fm1SampleBuf.at(sample)==nil,{
 				fm1DiskBuf.put(sample,Buffer.read(context.server,sample,action:{
 					arg bufnum;
-					fm1DiskSyn.put(voice,
-						Synth.before(fm1Syn,"fm1Samples",[
-							// \diskout,fm1DiskBus.at(voice),
-							\bufnum,bufnum,
-							\start,msg[3],
-							\amp,msg[4],
-							\pan,msg[5],
-							\atk,msg[6],
-							\rel,msg[7],
-							\cAtk,msg[8],
-							\cRel,msg[9],
-							\rate,msg[10],
-							\fxsend,msg[11],
-							\eqFreq,msg[12],
-							\eqDB,msg[13],
-							\lpf,msg[14],
-							\out,0,
-							\fx,fm1Bus,
-						]).onFree({
-							NetAddr("127.0.0.1",10111)
-								.sendMsg("odashodasho_voice",voice++" "++msg[1],0);
-						})
-					);	
-					NodeWatcher.register(fm1DiskSyn.at(voice));
-				}));
-			},{
-				if (fm1DiskSyn.at(voice).isRunning==true,{
-					fm1DiskSyn.at(voice).set(
-						\t_trig,1,
+					Synth.before(fm1Syn,"fm1Samples",[
+						// \diskout,fm1DiskBus.at(voice),
+						\bufnum,bufnum,
 						\start,msg[3],
 						\amp,msg[4],
 						\pan,msg[5],
@@ -219,36 +163,38 @@ Engine_Odashodasho : CroneEngine {
 						\cAtk,msg[8],
 						\cRel,msg[9],
 						\rate,msg[10],
-						\fxsend,msg[11],						
+						\fxsend,msg[11],
 						\eqFreq,msg[12],
 						\eqDB,msg[13],
 						\lpf,msg[14],
-					);
-				},{
-					fm1DiskSyn.put(voice,
-						Synth.before(fm1Syn,"fm1Samples",[
-							// \diskout,fm1DiskBus.at(voice),
-							\bufnum,fm1DiskBuf.at(sample),
-							\start,msg[3],
-							\amp,msg[4],
-							\pan,msg[5],
-							\atk,msg[6],
-							\rel,msg[7],
-							\cAtk,msg[8],
-							\cRel,msg[9],
-							\rate,msg[10],
-							\fxsend,msg[11],
-							\eqFreq,msg[12],
-							\eqDB,msg[13],
-							\lpf,msg[14],
-							\out,0,
-							\fx,fm1Bus,
-						]).onFree({
-							NetAddr("127.0.0.1",10111)
-								.sendMsg("odashodasho_voice",voice++" "++msg[1],0);
-						})
-					);	
-					NodeWatcher.register(fm1DiskSyn.at(voice));
+						\out,0,
+						\fx,fm1Bus,
+					]).onFree({
+						NetAddr("127.0.0.1",10111)
+							.sendMsg("odashodasho_voice",voice++" "++msg[1],0);
+					});
+				}));
+			},{
+				Synth.before(fm1Syn,"fm1Samples",[
+					// \diskout,fm1DiskBus.at(voice),
+					\bufnum,fm1SampleBuf.at(sample),
+					\start,msg[3],
+					\amp,msg[4],
+					\pan,msg[5],
+					\atk,msg[6],
+					\rel,msg[7],
+					\cAtk,msg[8],
+					\cRel,msg[9],
+					\rate,msg[10],
+					\fxsend,msg[11],
+					\eqFreq,msg[12],
+					\eqDB,msg[13],
+					\lpf,msg[14],
+					\out,0,
+					\fx,fm1Bus,
+				]).onFree({
+					NetAddr("127.0.0.1",10111)
+						.sendMsg("odashodasho_voice",voice++" "++msg[1],0);
 				});
 			});
 		});
