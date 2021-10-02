@@ -150,7 +150,8 @@ Engine_Odashodasho : CroneEngine {
 			var voice=msg[15].asString;
 			var sample=msg[2].asString;
 			if (fm1SampleBuf.at(sample)==nil,{
-				fm1DiskBuf.put(sample,Buffer.read(context.server,sample,action:{
+				("loading sample "++sample).postln;
+				fm1SampleBuf.put(sample,Buffer.read(context.server,sample,action:{
 					arg bufnum;
 					Synth.before(fm1Syn,"fm1Samples",[
 						// \diskout,fm1DiskBus.at(voice),
