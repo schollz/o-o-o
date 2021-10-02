@@ -65,7 +65,7 @@ patches["lead"]={
   noise_attack=0.01,
   noise_decay=1,
 }
-patches["lead2"]={
+patches["sample1"]={
   db=-2,
   pan=math.random(-50,50)/100,
   attack=0.01,
@@ -77,34 +77,16 @@ patches["lead2"]={
   index=math.random(200,250)/100,
   index_scale=1.2,
   send=-18,
-  divs={1/4,1/4,1/8,1/8,1/8,1/8,1/8,1/16},
+  divs={1/8,1/8,1/8,1/8,1/8,1/8,1/8,1/8},
   dens={0.5,0.75,0.15,0.25,0.5,0.25,0.75,0.5},
   eq_freq=650,
   eq_db=9,
   noise=-96,
   noise_attack=0.01,
   noise_decay=1,
+  sample="/home/we/dust/code/o-o-o/lib/yeahyeah.wav",
 }
-patches["lead3"]={
-  db=-2,
-  pan=math.random(-50,50)/100,
-  attack=0.01,
-  decay=2,
-  attack_curve=1,
-  decay_curve=-4,
-  mod_ratio=1,
-  car_ratio=1,
-  index=math.random(200,250)/100,
-  index_scale=1.2,
-  send=-18,
-  divs={1/4,1/4,1/8,1/8,1/8,1/8,1/8,1/16},
-  dens={0.5,0.75,0.15,0.25,0.5,0.25,0.75,0.5},
-  eq_freq=650,
-  eq_db=9,
-  noise=-96,
-  noise_attack=0.01,
-  noise_decay=1,
-}
+patches["sample2"]=patches["sample1"]
 patches["bass"]={
   db=6,
   attack=0.0,
@@ -318,6 +300,10 @@ function init()
     params:add{type="control",id=ins.."decay",name="decay",controlspec=controlspec.new(0,8,'lin',0.01,patches[ins].decay,'beats',0.01/8)}
     params:add{type="control",id=ins.."attack_curve",name="attack curve",controlspec=controlspec.new(-8,8,'lin',1,patches[ins].attack_curve,'',1/16)}
     params:add{type="control",id=ins.."decay_curve",name="decay curve",controlspec=controlspec.new(-8,8,'lin',1,patches[ins].decay_curve,'',1/16)}
+
+    -- sample
+
+    -- fm
     params:add{type="control",id=ins.."mod_ratio",name="mod ratio",controlspec=controlspec.new(0,8,'lin',0.01,patches[ins].mod_ratio,'x',0.01/8)}
     params:add{type="control",id=ins.."car_ratio",name="car ratio",controlspec=controlspec.new(0,50,'lin',0.01,patches[ins].car_ratio,'x',0.01/50)}
     params:add{type="control",id=ins.."index",name="index",controlspec=controlspec.new(0,200,'lin',0.1,patches[ins].index,'',0.1/200)}
@@ -328,6 +314,7 @@ function init()
     end}
     params:add{type="control",id=ins.."noise_attack",name="noise attack",controlspec=controlspec.new(0,6,'lin',0.01,patches[ins].noise_attack,'beats',0.01/6)}
     params:add{type="control",id=ins.."noise_decay",name="noise decay",controlspec=controlspec.new(0,6,'lin',0.01,patches[ins].noise_decay,'beats',0.01/6)}
+
     params:add_control(ins.."lpf","lpf",controlspec.WIDEFREQ)
     params:set(ins.."lpf",patches[ins].lpf or 20000)
     params:add_control(ins.."eq_freq","eq freq",controlspec.WIDEFREQ)
@@ -392,7 +379,7 @@ function init()
     networks[i]:set_action(function(nw)
       perform(v,nw,true)
     end)
-    params:delta(v.."play",1)
+    params:delta(v.."play",0)
     networks[i].name=v
   end
 
@@ -465,13 +452,13 @@ function perform(v,nw,do_perform)
       note=global_scales[v][note]
       local attack=params:get(v.."attack")*clock.get_beat_sec()*1*nw.div
       local decay=params:get(v.."decay")*clock.get_beat_sec()*1*nw.div
-      play_note({note=note,pan=(note%12)/12-0.5,type=v,decay=decay,attack=attack})
+      play_note({note=note,pan=(note%12)/12-0.5,type=v,decay=decay,attack=attack,id=nw.id})
     end
   else
     local note=global_scales[v][nw.id]
     local attack=params:get(v.."attack")*clock.get_beat_sec()*16*nw.div
     local decay=params:get(v.."decay")*clock.get_beat_sec()*16*nw.div
-    play_note({amp=nw.amp,note=note,pan=nw.pan,type=v,attack=attack,decay=decay})
+    play_note({amp=nw.amp,note=note,pan=nw.pan,type=v,attack=attack,decay=decay,id=nw.id})
   end
 end
 
@@ -558,16 +545,23 @@ function play_note(a)
         end
       end
     end
-    if string.find(a.type,"instrument") then
+    if string.find(a.type,"sample") then
       engine.fm1sample(
-        a.sample,
-        a.start,
+        a.note,
+        "/home/we/dust/code/o-o-o/lib/yeahyeah.wav",
+        (a.id-1)/63,
         a.amp,
         a.pan,
         a.attack,
         a.decay,
+        a.attack_curve,
+        a.decay_curve,
         1,
-        a.send
+        a.send,
+        a.eq_freq,
+        a.eq_db,
+        a.lpf,
+        a.type,
       )
     else
       engine.fm1(
