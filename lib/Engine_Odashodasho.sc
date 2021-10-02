@@ -64,6 +64,42 @@ Engine_Odashodasho : CroneEngine {
 			Out.ar(out,snd);
 		}).add;
 
+		SynthDef("fm1SamplesMono", {
+			arg out=0, bufnum=0, loop=0, rate=1, rateLag=0,start=0, end=1, reset=0, t_trig=1,
+			atk=0,rel=1, cAtk=4, cRel=(-4), amp=0.5,eqFreq=1200,eqDB=0,
+			lpf=20000, diskout,fxsend=0,fx=0, pan=0;
+			var snd,snd2,pos,pos2,frames,env;
+			var startA,endA,startB,endB,resetA,resetB,crossfade,aOrB;
+
+			frames = BufFrames.ir(bufnum);
+			env = EnvGen.ar(Env.perc(atk,rel,curve:[cAtk,cRel]),gate:t_trig,doneAction:2);
+				
+				// playbuf
+			snd = PlayBuf.ar(
+				numChannels:1, 
+				bufnum:bufnum,
+				rate:rate*BufRateScale.kr(bufnum),
+				startPos: ((start*(rate>0))*(frames))+(end*frames*(rate<0)),
+				trigger:t_trig,
+				loop:loop,
+				doneAction:2,
+			);
+
+			snd=snd*env*amp/10;
+
+			// add some boost
+			snd=BPeakEQ.ar(snd,eqFreq,0.5,eqDB);
+			
+			// low-pass filter
+			snd=LPF.ar(snd,lpf);
+
+			DetectSilence.ar(snd,doneAction:2);
+
+			snd = Pan2.ar(snd, pan);
+			Out.ar(fx, snd * fxsend.dbamp);
+			Out.ar(out,snd);
+		}).add;
+
 		SynthDef("diskout", { arg bufnum=0, inbus=0;
 			DiskOut.ar(bufnum,In.ar(inbus,2));
 		}).add;
@@ -149,11 +185,15 @@ Engine_Odashodasho : CroneEngine {
 			arg msg;
 			var voice=msg[15].asString;
 			var sample=msg[2].asString;
+			var synName="fm1Samples";
 			if (fm1SampleBuf.at(sample)==nil,{
 				("loading sample "++sample).postln;
 				fm1SampleBuf.put(sample,Buffer.read(context.server,sample,action:{
 					arg bufnum;
-					Synth.before(fm1Syn,"fm1Samples",[
+					if (fm1SampleBuf.at(sample).numChannels<2,{
+						synName="fm1SamplesMono";
+					});
+					Synth.before(fm1Syn,synName,[
 						// \diskout,fm1DiskBus.at(voice),
 						\bufnum,bufnum,
 						\start,msg[3],
@@ -176,7 +216,10 @@ Engine_Odashodasho : CroneEngine {
 					});
 				}));
 			},{
-				Synth.before(fm1Syn,"fm1Samples",[
+				if (fm1SampleBuf.at(sample).numChannels<2,{
+					synName="fm1SamplesMono";
+				});
+				Synth.before(fm1Syn,synName,[
 					// \diskout,fm1DiskBus.at(voice),
 					\bufnum,fm1SampleBuf.at(sample),
 					\start,msg[3],

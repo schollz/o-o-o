@@ -494,7 +494,7 @@ function perform(v,nw,do_perform)
   if not do_perform then
     do return end
   end
-  if v=="pad" then
+  if string.find(v,"pad") then
     local pad_cols={{2,2},{2,3},{3,2},{3,1},{2,2},{2,3},{3,2},{1,3}}
     -- play three notes
     local notes={9-nw.row}
