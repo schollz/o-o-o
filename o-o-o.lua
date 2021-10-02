@@ -45,26 +45,6 @@ local save_params={"scale_mode","root_note","attack","decay","attack_curve","dec
 -- define patches
 patches={}
 -- https://sccode.org/1-5bA
-patches["lead"]={
-  db=-2,
-  pan=math.random(-50,50)/100,
-  attack=0.01,
-  decay=2,
-  attack_curve=1,
-  decay_curve=-4,
-  mod_ratio=1,
-  car_ratio=1,
-  index=math.random(200,250)/100,
-  index_scale=1.2,
-  send=-18,
-  divs={1/4,1/4,1/8,1/8,1/8,1/8,1/8,1/16},
-  dens={0.5,0.75,0.15,0.25,0.5,0.25,0.75,0.5},
-  eq_freq=650,
-  eq_db=9,
-  noise=-96,
-  noise_attack=0.01,
-  noise_decay=1,
-}
 patches["sample1"]={
   db=-2,
   pan=math.random(-50,50)/100,
@@ -86,7 +66,47 @@ patches["sample1"]={
   noise_decay=1,
   sample="/home/we/dust/code/o-o-o/lib/yeahyeah.wav",
 }
-patches["sample2"]=patches["sample1"]
+patches["sample2"]={
+  db=-2,
+  pan=math.random(-50,50)/100,
+  attack=0.01,
+  decay=2,
+  attack_curve=1,
+  decay_curve=-4,
+  mod_ratio=1,
+  car_ratio=1,
+  index=math.random(200,250)/100,
+  index_scale=1.2,
+  send=-18,
+  divs={1/8,1/8,1/8,1/8,1/8,1/8,1/8,1/8},
+  dens={0.5,0.75,0.15,0.25,0.5,0.25,0.75,0.5},
+  eq_freq=650,
+  eq_db=9,
+  noise=-96,
+  noise_attack=0.01,
+  noise_decay=1,
+  sample="/home/we/dust/code/o-o-o/lib/yeahyeah.wav",
+}
+patches["lead"]={
+  db=-2,
+  pan=math.random(-50,50)/100,
+  attack=0.01,
+  decay=2,
+  attack_curve=1,
+  decay_curve=-4,
+  mod_ratio=1,
+  car_ratio=1,
+  index=math.random(200,250)/100,
+  index_scale=1.2,
+  send=-18,
+  divs={1/4,1/4,1/8,1/8,1/8,1/8,1/8,1/16},
+  dens={0.5,0.75,0.15,0.25,0.5,0.25,0.75,0.5},
+  eq_freq=650,
+  eq_db=9,
+  noise=-96,
+  noise_attack=0.01,
+  noise_decay=1,
+}
 patches["bass"]={
   db=6,
   attack=0.0,
@@ -282,7 +302,7 @@ function init()
   parameter_list={}
   parameter_list["Odashodasho"]={"attack_curve","decay_curve","mod_ratio","car_ratio","index","index_scale","noise","noise_attack","noise_decay","eq_freq","eq_db"}
   parameter_list["MxSamples"]={"instrument"}
-  instrument_list={"lead","pad","bass","kick","snare","hihat","lead2","lead3"}
+  instrument_list={"sample1","sample2","lead","pad","bass","kick","snare","hihat"}
   for i,ins in ipairs(instrument_list) do
     params:add_group(ins,29)
     params:add{type="option",id=ins.."scale_mode",name="scale mode",
@@ -561,7 +581,7 @@ function play_note(a)
         a.eq_freq,
         a.eq_db,
         a.lpf,
-        a.type,
+        a.type
       )
     else
       engine.fm1(

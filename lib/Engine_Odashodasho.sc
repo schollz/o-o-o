@@ -25,11 +25,13 @@ Engine_Odashodasho : CroneEngine {
 		fm1DiskBus=Dictionary.new;
 		fm1DiskSyn=Dictionary.new;
 		fm1DiskBuf=Dictionary.new;
+		fm1SampleBuf=Dictionary.new;
+		fm1SampleSyn=Dictionary.new;
 
 		SynthDef("fm1Samples", {
 			arg out=0, bufnum=0, rate=1, rateLag=0,start=0, end=1, reset=0, t_trig=1,
 			atk=0,rel=1, cAtk=4, cRel=(-4), amp=0.5,eqFreq=1200,eqDB=0,
-			lpf=20000, diskout;
+			lpf=20000, diskout,fxsend=0,fx=0, pan=0;
 			var snd,snd2,pos,pos2,frames,env;
 			var startA,endA,startB,endB,resetA,resetB,crossfade,aOrB;
 
@@ -175,10 +177,9 @@ Engine_Odashodasho : CroneEngine {
 		
 		this.addCommand("fm1sample","isffffffffffffs",{
 			arg msg;
-			var voice=msg[15];
-			var sample=msg[2];
+			var voice=msg[15].asString;
+			var sample=msg[2].asString;
 			if (fm1SampleBuf.at(sample)==nil,{
-				arg bufnum;
 				fm1DiskBuf.put(sample,Buffer.read(context.server,sample,action:{
 					arg bufnum;
 					fm1DiskSyn.put(voice,
@@ -201,7 +202,7 @@ Engine_Odashodasho : CroneEngine {
 							\fx,fm1Bus,
 						]).onFree({
 							NetAddr("127.0.0.1",10111)
-								.sendMsg("odashodasho_voice",voice++msg[1],0);
+								.sendMsg("odashodasho_voice",voice++" "++msg[1],0);
 						})
 					);	
 					NodeWatcher.register(fm1DiskSyn.at(voice));
@@ -227,7 +228,7 @@ Engine_Odashodasho : CroneEngine {
 					fm1DiskSyn.put(voice,
 						Synth.before(fm1Syn,"fm1Samples",[
 							// \diskout,fm1DiskBus.at(voice),
-							\bufnum,bufnum,
+							\bufnum,fm1DiskBuf.at(sample),
 							\start,msg[3],
 							\amp,msg[4],
 							\pan,msg[5],
@@ -244,7 +245,7 @@ Engine_Odashodasho : CroneEngine {
 							\fx,fm1Bus,
 						]).onFree({
 							NetAddr("127.0.0.1",10111)
-								.sendMsg("odashodasho_voice",voice++msg[1],0);
+								.sendMsg("odashodasho_voice",voice++" "++msg[1],0);
 						})
 					);	
 					NodeWatcher.register(fm1DiskSyn.at(voice));
@@ -324,6 +325,8 @@ Engine_Odashodasho : CroneEngine {
 		fm1DiskBus.keysValuesDo({ arg key, value; value.free; });
 		fm1DiskSyn.keysValuesDo({ arg key, value; value.free; });
 		fm1DiskBuf.keysValuesDo({ arg key, value; value.free; });
+		fm1SampleBuf.keysValuesDo({ arg key, value; value.free; });
+		fm1SampleSyn.keysValuesDo({ arg key, value; value.free; });
 		// </Odashodasho>
 	}
 }
