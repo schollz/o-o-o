@@ -66,6 +66,8 @@ patches["lead"]={
   noise=-96,
   noise_attack=0.01,
   noise_decay=1,
+  sample_file=_path.audio.."o-o-o/samples/music_box_c4.wav",
+  sample_note=60,
 }
 patches["lead2"]={
   db=-2,
@@ -86,6 +88,8 @@ patches["lead2"]={
   noise=-96,
   noise_attack=0.01,
   noise_decay=1,
+  sample_file=_path.audio.."o-o-o/samples/music_box_c4.wav",
+  sample_note=60,
 }
 patches["bass"]={
   db=6,
@@ -106,6 +110,8 @@ patches["bass"]={
   noise_attack=0.01,
   noise_decay=1,
   root_note=60-24,
+  sample_file=_path.audio.."o-o-o/samples/rhodes_c2.wav",
+  sample_note=36,
 }
 patches["snare"]={
   db=-6,
@@ -127,6 +133,7 @@ patches["snare"]={
   noise_attack=0.01,
   noise_decay=0.1,
   lpf=2000,
+  sample_file=_path.audio.."o-o-o/samples/sd002.wav",
 }
 patches["hihat"]={
   db=-20,
@@ -146,6 +153,7 @@ patches["hihat"]={
   noise=11,
   noise_attack=0.01,
   noise_decay=0.11,
+  sample_file=_path.audio.."o-o-o/samples/ch001.wav",
 }
 patches["kick"]={
   db=20,
@@ -167,6 +175,7 @@ patches["kick"]={
   noise_attack=0.01,
   noise_decay=0.6,
   lpf=320,
+  sample_file=_path.audio.."o-o-o/samples/kick000.wav",
 }
 patches["pad"]={
   db=-10,
@@ -191,6 +200,8 @@ patches["pad"]={
   noise_attack=0.01,
   noise_decay=1,
   root_note=60-12,
+  sample_file=_path.audio.."o-o-o/samples/music_box_c4.wav",
+  sample_note=60,
 }
 patches["pad2"]={
   db=-10,
@@ -215,9 +226,16 @@ patches["pad2"]={
   noise_attack=0.01,
   noise_decay=1,
   root_note=60-12,
+  sample_file=_path.audio.."o-o-o/samples/music_box_c4.wav",
+  sample_note=60,
 }
 
 function init()
+  -- copy over sample files
+  if not util.file_exists(_path.audio.."o-o-o/samples/") then
+    os.execute("mkdir -p ".._path.audio.."o-o-o/samples/")
+    os.execute("cp ".._path.code.."o-o-o/lib/samples/*.wav ".._path.audio.."o-o-o/samples/")
+  end
   -- engine.name="Odashodasho"
   engine_loaded="none"
   -- available divisions
@@ -304,17 +322,19 @@ function init()
   params:add_option("record","record each",{"off","on"},1)
   -- setup parameters
   parameter_list={}
-  parameter_list["Odashodasho"]={"sample_file","sound","attack_curve","decay_curve","mod_ratio","car_ratio","index","index_scale","noise","noise_attack","noise_decay","eq_freq","eq_db"}
+  parameter_list["Odashodasho"]={"sample_file","sample_note","sound","attack_curve","decay_curve","mod_ratio","car_ratio","index","index_scale","noise","noise_attack","noise_decay","eq_freq","eq_db"}
   parameter_list["MxSamples"]={"instrument"}
   instrument_list={"lead","pad","bass","kick","snare","hihat","lead2","pad2"}
   for i,ins in ipairs(instrument_list) do
-    params:add_group(ins,30)
+    params:add_group(ins,31)
     params:add{type="option",id=ins.."sound",name="sound",options={"fm","sample"},default=1,action=function(v)
       rebuild_menu(ins,v)
     end}
     -- sample
-    params:add_file(ins.."sample_file","sample file","/home/we/dust/audio/")
-    params:hide(ins.."sample_file")
+    params:add_file(ins.."sample_file","sample file",patches[ins].sample_file)
+    params:add{type="number",id=ins.."sample_note",name="sample note",
+      min=0,max=127,default=patches[ins].sample_note or (patches[ins].root_note or 60),formatter=function(param) return MusicUtil.note_num_to_name(param:get(),true) end,
+    action=function() generate_scale() end}
     params:add{type="option",id=ins.."scale_mode",name="scale mode",
       options=scale_names,default=5,
     action=function() generate_scale() end}
@@ -471,7 +491,7 @@ end
 
 function rebuild_menu(ins,v)
   local fm_specific={"mod_ratio","car_ratio","index","index_scale","noise","noise_attack","noise_decay"}
-  local sample_specific={"sample_file"}
+  local sample_specific={"sample_file","sample_note"}
   if v==2 then
     for _,p in ipairs(fm_specific) do
       params:hide(ins..p)
@@ -603,6 +623,7 @@ function play_note(a)
         print("not a valid file: "..sample)
         do return end
       end
+      rate=transpose_to_intonation(params:get(a.type.."sample_note"),a.note)
       engine.fm1sample(
         a.note,
         sample,
@@ -613,7 +634,7 @@ function play_note(a)
         a.decay,
         a.attack_curve,
         a.decay_curve,
-        normal_intonation[a.note%12+1],
+        rate,
         a.send,
         a.eq_freq,
         a.eq_db,

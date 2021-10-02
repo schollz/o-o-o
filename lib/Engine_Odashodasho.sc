@@ -35,8 +35,9 @@ Engine_Odashodasho : CroneEngine {
 			var snd,snd2,pos,pos2,frames,env;
 			var startA,endA,startB,endB,resetA,resetB,crossfade,aOrB;
 
+			amp=Clip.kr(amp,0,4);
 			frames = BufFrames.ir(bufnum);
-			env = EnvGen.ar(Env.perc(atk,rel,curve:[cAtk,cRel]),gate:t_trig,doneAction:2);
+			env = EnvGen.ar(Env.perc(atk+0.01,rel,curve:[cAtk,cRel]),gate:t_trig,doneAction:2);
 				
 				// playbuf
 			snd = PlayBuf.ar(
@@ -71,8 +72,9 @@ Engine_Odashodasho : CroneEngine {
 			var snd,snd2,pos,pos2,frames,env;
 			var startA,endA,startB,endB,resetA,resetB,crossfade,aOrB;
 
+			amp=Clip.kr(amp,0,4);
 			frames = BufFrames.ir(bufnum);
-			env = EnvGen.ar(Env.perc(atk,rel,curve:[cAtk,cRel]),gate:t_trig,doneAction:2);
+			env = EnvGen.ar(Env.perc(atk+0.01,rel,curve:[cAtk,cRel]),gate:t_trig,doneAction:2);
 				
 				// playbuf
 			snd = PlayBuf.ar(
@@ -115,6 +117,7 @@ Engine_Odashodasho : CroneEngine {
 			out=0, fx=0, fxsend=(-25);
 			var car, mod, env, iEnv;
 			
+			amp=Clip.kr(amp,0,4);
 
 			//index of modulation
 			iEnv = EnvGen.kr(
@@ -156,7 +159,7 @@ Engine_Odashodasho : CroneEngine {
 			//direct out/reverb send
 			Out.ar(out, car);
 			Out.ar(diskout,car);
-			Out.ar(fx, car * fxsend.dbamp);
+			Out.ar(fx, car * Clip.kr(fxsend.dbamp));
 		}).add;
 		
 		//reverb
