@@ -176,6 +176,7 @@ patches["kick"]={
   noise_decay=0.6,
   lpf=320,
   sample_file=_path.audio.."o-o-o/samples/kick000.wav",
+  sample_note=36,
 }
 patches["pad"]={
   db=-10,
@@ -341,7 +342,7 @@ function init()
     params:add{type="number",id=ins.."root_note",name="root note",
       min=0,max=127,default=patches[ins].root_note or 60,formatter=function(param) return MusicUtil.note_num_to_name(param:get(),true) end,
     action=function() generate_scale() end}
-    params:add{type="control",id=ins.."db",name="volume",controlspec=controlspec.new(-96,20,'lin',0.1,patches[ins].db,'',0.1/(20+96)),formatter=function(v)
+    params:add{type="control",id=ins.."db",name="volume",controlspec=controlspec.new(-96,36,'lin',0.1,patches[ins].db,'',0.1/(36+96)),formatter=function(v)
       local val=math.floor(util.linlin(0,1,v.controlspec.minval,v.controlspec.maxval,v.raw)*10)/10
       return ((val<0) and "" or "+")..val.." dB"
     end}
@@ -486,6 +487,7 @@ function init()
   update_engine()
   for _,ins in ipairs(instrument_list) do
     rebuild_menu(ins,1)
+    params:set(ins.."play",1)
   end
 end
 
