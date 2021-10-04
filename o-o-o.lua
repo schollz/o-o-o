@@ -341,7 +341,7 @@ function init()
     params:add{type="number",id=ins.."root_note",name="root note",
       min=0,max=127,default=patches[ins].root_note or 60,formatter=function(param) return MusicUtil.note_num_to_name(param:get(),true) end,
     action=function() generate_scale() end}
-    params:add{type="control",id=ins.."db",name="volume",controlspec=controlspec.new(-96,36,'lin',0.1,patches[ins].db,'',0.1/(36+96)),formatter=function(v)
+    params:add{type="control",id=ins.."db",name="volume",controlspec=controlspec.new(-96,20,'lin',0.1,patches[ins].db,'',0.1/(20+96)),formatter=function(v)
       local val=math.floor(util.linlin(0,1,v.controlspec.minval,v.controlspec.maxval,v.raw)*10)/10
       return ((val<0) and "" or "+")..val.." dB"
     end}
@@ -356,7 +356,7 @@ function init()
     params:add{type="control",id=ins.."car_ratio",name="car ratio",controlspec=controlspec.new(0,50,'lin',0.01,patches[ins].car_ratio,'x',0.01/50)}
     params:add{type="control",id=ins.."index",name="index",controlspec=controlspec.new(0,200,'lin',0.1,patches[ins].index,'',0.1/200)}
     params:add{type="control",id=ins.."index_scale",name="index scale",controlspec=controlspec.new(0,10,'lin',0.1,patches[ins].index_scale,'',0.1/10)}
-    params:add{type="control",id=ins.."noise",name="noise",controlspec=controlspec.new(-96,36,'lin',1,patches[ins].noise,'',1/(36+96)),formatter=function(v)
+    params:add{type="control",id=ins.."noise",name="noise",controlspec=controlspec.new(-96,20,'lin',1,patches[ins].noise,'',1/(20+96)),formatter=function(v)
       local val=math.floor(util.linlin(0,1,v.controlspec.minval,v.controlspec.maxval,v.raw)*10)/10
       return ((val<0) and "" or "+")..val.." dB"
     end}
