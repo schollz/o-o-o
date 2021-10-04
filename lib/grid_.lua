@@ -216,4 +216,17 @@ function GGrid:grid_redraw()
   self.g:refresh()
 end
 
+function GGrid:gridstation()
+  local c={"0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"}
+  gs="16 8 #bbbbbb #fcb400 #ffffff #000000 20 \n"
+  gs=gs.."20 4 1 1\n"
+  for row=1,8 do 
+    for col=1,16 do
+      gs=gs..c[self.visual[row][col]*3+1].." "
+    end
+    gs=gs.."\n"
+  end
+  print(gs)
+end
+
 return GGrid
