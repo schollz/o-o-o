@@ -124,15 +124,15 @@ function Network:emit(step,div)
 end
 
 function Network:toggle_play(playing)
-  if playing~=nil then 
+  if playing~=nil then
     self.playing=playing
   else
     self.playing=(not self.playing)
   end
-  if not self.playing then 
+  if not self.playing then
     -- disarm everything
     for i,nw in ipairs(self.nw) do
-      if nw.armed then 
+      if nw.armed then
         self.nw[i].armed=false
       end
     end
