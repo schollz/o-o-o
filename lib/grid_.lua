@@ -85,12 +85,13 @@ function GGrid:key_press(row,col,on)
       end
       do return end
     end
-    if col==9 and row==8 then
-      global_page=util.clamp(global_page-1,1,#networks)
-    elseif col==10 and row==8 then
-      global_page=util.clamp(global_page+1,1,#networks)
-    elseif col==16 and row==8 then
-      params:delta(instrument_list[global_page].."play",1)
+    local page=col-8
+    if row==8 then
+      global_page=page
+    elseif row==7 then
+      params:delta(instrument_list[page].."play",1)
+    elseif row==6 then
+      params:delta(instrument_list[page].."solo",1)
     end
     do return end
   end
@@ -155,23 +156,26 @@ function GGrid:get_visual()
     end
   end
 
-  -- illuminate currently pressed button
-  for k,_ in pairs(self.pressed_buttons) do
-    local row,col=k:match("(%d+),(%d+)")
-    self.visual[tonumber(row)][tonumber(col)]=self.visual[tonumber(row)][tonumber(col)]+5
-    -- illuminate all the connections from the pressed node
-    local i=networks[global_page].rowcol_to_i[tonumber(row)][tonumber(col)]
-    for _,j in ipairs(networks[global_page]:to(i)) do
-      self.visual[networks[global_page].nw[j].row][networks[global_page].nw[j].col]=self.visual[networks[global_page].nw[j].row][networks[global_page].nw[j].col]+5
-    end
+  -- illuminate playing buttons
+  for i=1,8 do
+    local row=7
+    local col=i+8
+    self.visual[row][col]=(networks[i].playing and 4 or 2)
   end
 
-  -- illuminate page buttons
-  self.visual[8][10]=math.floor(util.linlin(1,#networks,1,15.9,global_page))
-  self.visual[8][9]=15-self.visual[8][10]
+  -- illuminate switch buttons
+  for i=1,8 do
+    local row=8
+    local col=i+8
+    self.visual[row][col]=(i==global_page and 4 or 2)
+  end
 
-  -- illuminate playing button
-  self.visual[8][16]=networks[global_page].playing and 10 or 2
+  -- illuminate solo buttons
+  for i=1,8 do
+    local row=6
+    local col=i+8
+    self.visual[row][col]=(params:get(instrument_list[i].."solo")==1 and 4 or 2)
+  end
 
   -- illuminate the bank buttons
   local ins=instrument_list[global_page]
@@ -183,6 +187,16 @@ function GGrid:get_visual()
     end
   end
 
+  -- illuminate currently pressed button
+  for k,_ in pairs(self.pressed_buttons) do
+    local row,col=k:match("(%d+),(%d+)")
+    self.visual[tonumber(row)][tonumber(col)]=self.visual[tonumber(row)][tonumber(col)]+5
+    -- illuminate all the connections from the pressed node
+    local i=networks[global_page].rowcol_to_i[tonumber(row)][tonumber(col)]
+    for _,j in ipairs(networks[global_page]:to(i)) do
+      self.visual[networks[global_page].nw[j].row][networks[global_page].nw[j].col]=self.visual[networks[global_page].nw[j].row][networks[global_page].nw[j].col]+5
+    end
+  end
   return self.visual
 end
 
@@ -200,6 +214,19 @@ function GGrid:grid_redraw()
     end
   end
   self.g:refresh()
+end
+
+function GGrid:gridstation()
+  local c={"0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"}
+  gs="16 8 #bbbbbb #fcb400 #ffffff #000000 20 \n"
+  gs=gs.."20 4 1 1\n"
+  for row=1,8 do 
+    for col=1,16 do
+      gs=gs..c[self.visual[row][col]*3+1].." "
+    end
+    gs=gs.."\n"
+  end
+  print(gs)
 end
 
 return GGrid

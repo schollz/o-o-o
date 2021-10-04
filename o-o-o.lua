@@ -1,4 +1,4 @@
--- o-o-o v0.2.0
+-- o-o-o v0.3.0
 --
 -- connect the dots.
 --
@@ -31,6 +31,7 @@ json=require("cjson")
 include("o-o-o/lib/utils")
 local er=include("o-o-o/lib/er")
 local Lattice=require("lattice")
+local Intonation=require("intonation")
 local MusicUtil=require("musicutil")
 local Network=include("o-o-o/lib/network")
 local Gridd=include("o-o-o/lib/grid_")
@@ -40,8 +41,9 @@ if util.file_exists(_path.code.."mx.samples") then
 end
 uimessage=""
 
-local save_params={"scale_mode","root_note","attack","decay","attack_curve","decay_curve","mod_ratio","car_ratio","index","index_scale","sample","reverb","eq_freq","eq_db","lpf","noise","noise_attack","noise_attack","noise_decay","div_scale"}
-
+local save_params={"scale_mode","root_note","attack","decay","attack_curve","decay_curve","mod_ratio","car_ratio","index","index_scale","instrument","reverb","eq_freq","eq_db","lpf","noise","noise_attack","noise_attack","noise_decay","div_scale"}
+local normal_intonation=Intonation.normal()
+tab.print(normal_intonation)
 -- define patches
 patches={}
 -- https://sccode.org/1-5bA
@@ -64,6 +66,30 @@ patches["lead"]={
   noise=-96,
   noise_attack=0.01,
   noise_decay=1,
+  sample_file=_path.audio.."o-o-o/samples/music_box_c4.wav",
+  sample_note=72,
+}
+patches["lead2"]={
+  db=-2,
+  pan=math.random(-50,50)/100,
+  attack=0.01,
+  decay=2,
+  attack_curve=1,
+  decay_curve=-4,
+  mod_ratio=1,
+  car_ratio=1,
+  index=math.random(200,250)/100,
+  index_scale=1.2,
+  send=-18,
+  divs={1/4,1/4,1/8,1/8,1/8,1/8,1/8,1/16},
+  dens={0.5,0.75,0.15,0.25,0.5,0.25,0.75,0.5},
+  eq_freq=650,
+  eq_db=9,
+  noise=-96,
+  noise_attack=0.01,
+  noise_decay=1,
+  sample_file=_path.audio.."o-o-o/samples/music_box_c4.wav",
+  sample_note=72,
 }
 patches["bass"]={
   db=6,
@@ -84,6 +110,8 @@ patches["bass"]={
   noise_attack=0.01,
   noise_decay=1,
   root_note=60-24,
+  sample_file=_path.audio.."o-o-o/samples/rhodes_c2.wav",
+  sample_note=36,
 }
 patches["snare"]={
   db=-6,
@@ -105,6 +133,7 @@ patches["snare"]={
   noise_attack=0.01,
   noise_decay=0.1,
   lpf=2000,
+  sample_file=_path.audio.."o-o-o/samples/sd002.wav",
 }
 patches["hihat"]={
   db=-20,
@@ -124,6 +153,7 @@ patches["hihat"]={
   noise=11,
   noise_attack=0.01,
   noise_decay=0.11,
+  sample_file=_path.audio.."o-o-o/samples/ch001.wav",
 }
 patches["kick"]={
   db=20,
@@ -145,6 +175,8 @@ patches["kick"]={
   noise_attack=0.01,
   noise_decay=0.6,
   lpf=320,
+  sample_file=_path.audio.."o-o-o/samples/kick000.wav",
+  sample_note=36,
 }
 patches["pad"]={
   db=-10,
@@ -169,14 +201,48 @@ patches["pad"]={
   noise_attack=0.01,
   noise_decay=1,
   root_note=60-12,
+  sample_file=_path.audio.."o-o-o/samples/music_box_c4.wav",
+  sample_note=72,
+}
+patches["pad2"]={
+  db=-10,
+  pan=0,
+  attack=0.01,
+  decay=2,
+  attack_curve=0,
+  decay_curve=0,
+  mod_ratio=2,
+  car_ratio=1,
+  index=1.0,
+  -- mod_ratio=1,
+  -- car_ratio=1,
+  -- index=1.5,
+  index_scale=4,
+  send=-15,
+  divs={2,2,2,2,1,1,1,1},
+  dens={1,1,1,1,1,1,1,1},
+  eq_freq=800,
+  eq_db=10,
+  noise=-96,
+  noise_attack=0.01,
+  noise_decay=1,
+  root_note=60-12,
+  sample_file=_path.audio.."o-o-o/samples/music_box_c4.wav",
+  sample_note=72,
 }
 
 function init()
+  -- copy over sample files
+  if not util.file_exists(_path.audio.."o-o-o/samples/") then
+    os.execute("mkdir -p ".._path.audio.."o-o-o/samples/")
+    os.execute("cp ".._path.code.."o-o-o/lib/samples/*.wav ".._path.audio.."o-o-o/samples/")
+  end
   -- engine.name="Odashodasho"
   engine_loaded="none"
   -- available divisions
   global_div_scales={1/16,1/8,1/4,1/2,1,2,4,8,16}
   global_page=1
+  global_solo=false
   networks={}
   bank={}
 
@@ -254,13 +320,22 @@ function init()
     table.insert(scale_names,string.lower(MusicUtil.SCALES[i].name))
   end
   params:add_option("playback","play during playback",{"off","on"},1)
+  params:add_option("record","record each",{"off","on"},1)
   -- setup parameters
   parameter_list={}
-  parameter_list["Odashodasho"]={"attack_curve","decay_curve","mod_ratio","car_ratio","index","index_scale","noise","noise_attack","noise_decay","eq_freq","eq_db"}
-  parameter_list["MxSamples"]={"sample"}
-  instrument_list={"lead","pad","bass","kick","snare","hihat"}
+  parameter_list["Odashodasho"]={"sample_file","sample_note","sound","attack_curve","decay_curve","mod_ratio","car_ratio","index","index_scale","noise","noise_attack","noise_decay","eq_freq","eq_db"}
+  parameter_list["MxSamples"]={"instrument"}
+  instrument_list={"lead","pad","bass","kick","snare","hihat","lead2","pad2"}
   for i,ins in ipairs(instrument_list) do
-    params:add_group(ins,27)
+    params:add_group(ins,31)
+    params:add{type="option",id=ins.."sound",name="sound",options={"fm","sample"},default=1,action=function(v)
+      rebuild_menu(ins,v)
+    end}
+    -- sample
+    params:add_file(ins.."sample_file","sample file",patches[ins].sample_file)
+    params:add{type="number",id=ins.."sample_note",name="sample note",
+      min=0,max=127,default=patches[ins].sample_note or (patches[ins].root_note or 60),formatter=function(param) return MusicUtil.note_num_to_name(param:get(),true) end,
+    action=function() generate_scale() end}
     params:add{type="option",id=ins.."scale_mode",name="scale mode",
       options=scale_names,default=5,
     action=function() generate_scale() end}
@@ -271,21 +346,24 @@ function init()
       local val=math.floor(util.linlin(0,1,v.controlspec.minval,v.controlspec.maxval,v.raw)*10)/10
       return ((val<0) and "" or "+")..val.." dB"
     end}
-    params:add{type="option",id=ins.."sample",name="sample",options=mx_instrument_list,default=1}
+    params:add{type="option",id=ins.."instrument",name="instrument",options=mx_instrument_list,default=1}
     params:add{type="control",id=ins.."attack",name="attack",controlspec=controlspec.new(0,8,'lin',0.01,patches[ins].attack,'beats',0.01/8)}
     params:add{type="control",id=ins.."decay",name="decay",controlspec=controlspec.new(0,8,'lin',0.01,patches[ins].decay,'beats',0.01/8)}
     params:add{type="control",id=ins.."attack_curve",name="attack curve",controlspec=controlspec.new(-8,8,'lin',1,patches[ins].attack_curve,'',1/16)}
     params:add{type="control",id=ins.."decay_curve",name="decay curve",controlspec=controlspec.new(-8,8,'lin',1,patches[ins].decay_curve,'',1/16)}
+
+    -- fm
     params:add{type="control",id=ins.."mod_ratio",name="mod ratio",controlspec=controlspec.new(0,8,'lin',0.01,patches[ins].mod_ratio,'x',0.01/8)}
     params:add{type="control",id=ins.."car_ratio",name="car ratio",controlspec=controlspec.new(0,50,'lin',0.01,patches[ins].car_ratio,'x',0.01/50)}
     params:add{type="control",id=ins.."index",name="index",controlspec=controlspec.new(0,200,'lin',0.1,patches[ins].index,'',0.1/200)}
     params:add{type="control",id=ins.."index_scale",name="index scale",controlspec=controlspec.new(0,10,'lin',0.1,patches[ins].index_scale,'',0.1/10)}
-    params:add{type="control",id=ins.."noise",name="noise",controlspec=controlspec.new(-96,36,'lin',1,patches[ins].noise,'',1/(36+96)),formatter=function(v)
+    params:add{type="control",id=ins.."noise",name="noise",controlspec=controlspec.new(-96,20,'lin',1,patches[ins].noise,'',1/(20+96)),formatter=function(v)
       local val=math.floor(util.linlin(0,1,v.controlspec.minval,v.controlspec.maxval,v.raw)*10)/10
       return ((val<0) and "" or "+")..val.." dB"
     end}
     params:add{type="control",id=ins.."noise_attack",name="noise attack",controlspec=controlspec.new(0,6,'lin',0.01,patches[ins].noise_attack,'beats',0.01/6)}
     params:add{type="control",id=ins.."noise_decay",name="noise decay",controlspec=controlspec.new(0,6,'lin',0.01,patches[ins].noise_decay,'beats',0.01/6)}
+
     params:add_control(ins.."lpf","lpf",controlspec.WIDEFREQ)
     params:set(ins.."lpf",patches[ins].lpf or 20000)
     params:add_control(ins.."eq_freq","eq freq",controlspec.WIDEFREQ)
@@ -323,7 +401,17 @@ function init()
     }
     params:add{type='binary',id=ins..'play',name='play',behavior='toggle',
       action=function(v)
-        networks[i].playing=v==1
+        networks[i]:toggle_play(v==1)
+      end
+    }
+    params:add{type='binary',id=ins..'solo',name='solo',behavior='toggle',
+      action=function(v)
+        global_solo=false
+        for _,ins2 in ipairs(instrument_list) do
+          if params:get(ins2.."solo")==1 then
+            global_solo=true
+          end
+        end
       end
     }
   end
@@ -340,7 +428,7 @@ function init()
     networks[i]:set_action(function(nw)
       perform(v,nw,true)
     end)
-    params:delta(v.."play",1)
+    params:delta(v.."play",0)
     networks[i].name=v
   end
 
@@ -397,13 +485,38 @@ function init()
 
   -- update parameters menu
   update_engine()
+  for _,ins in ipairs(instrument_list) do
+    rebuild_menu(ins,1)
+    params:set(ins.."play",1)
+  end
+end
+
+function rebuild_menu(ins,v)
+  local fm_specific={"mod_ratio","car_ratio","index","index_scale","noise","noise_attack","noise_decay"}
+  local sample_specific={"sample_file","sample_note"}
+  if v==2 then
+    for _,p in ipairs(fm_specific) do
+      params:hide(ins..p)
+    end
+    for _,p in ipairs(sample_specific) do
+      params:show(ins..p)
+    end
+  else
+    for _,p in ipairs(sample_specific) do
+      params:hide(ins..p)
+    end
+    for _,p in ipairs(fm_specific) do
+      params:show(ins..p)
+    end
+  end
+  _menu.rebuild_params()
 end
 
 function perform(v,nw,do_perform)
   if not do_perform then
     do return end
   end
-  if v=="pad" then
+  if string.find(v,"pad") then
     local pad_cols={{2,2},{2,3},{3,2},{3,1},{2,2},{2,3},{3,2},{1,3}}
     -- play three notes
     local notes={9-nw.row}
@@ -413,13 +526,13 @@ function perform(v,nw,do_perform)
       note=global_scales[v][note]
       local attack=params:get(v.."attack")*clock.get_beat_sec()*1*nw.div
       local decay=params:get(v.."decay")*clock.get_beat_sec()*1*nw.div
-      play_note({note=note,pan=(note%12)/12-0.5,type=v,decay=decay,attack=attack})
+      play_note({note=note,pan=(note%12)/12-0.5,type=v,decay=decay,attack=attack,id=nw.id})
     end
   else
     local note=global_scales[v][nw.id]
     local attack=params:get(v.."attack")*clock.get_beat_sec()*16*nw.div
     local decay=params:get(v.."decay")*clock.get_beat_sec()*16*nw.div
-    play_note({amp=nw.amp,note=note,pan=nw.pan,type=v,attack=attack,decay=decay})
+    play_note({amp=nw.amp,note=note,pan=nw.pan,type=v,attack=attack,decay=decay,id=nw.id})
   end
 end
 
@@ -459,6 +572,11 @@ function play_note(a)
   if a.type==nil then
     a.type="lead"
   end
+  if global_solo then
+    if params:get(a.type.."solo")==0 then
+      do return end
+    end
+  end
 
   if a.type=="kick" then
     while a.note>31 do
@@ -489,30 +607,70 @@ function play_note(a)
   a.noise_decay=a.noise_decay or params:get(a.type.."noise_decay")
   -- tab.print(a)
   if engine_loaded=="Odashodasho" then
-    engine.fm1(
-      a.note,
-      a.amp,
-      a.pan,
-      a.attack,
-      a.decay,
-      a.attack_curve,
-      a.decay_curve,
-      a.mod_ratio,
-      a.car_ratio,
-      a.index,
-      a.index_scale,
-      a.send,
-      a.eq_freq,
-      a.eq_db,
-      a.lpf,
-      a.noise,
-      a.noise_attack,
-      a.noise_decay,
-      a.type
-    )
-  else
+    local do_record=params:get("record")==2
+    local record_path=""
+    if do_record then
+      local record_dir="/home/we/dust/audio/o-o-o/"..os.date("%Y%m%d")
+      os.execute("mkdir -p "..record_dir)
+      for i=1,99 do
+        record_path=record_dir.."/"..a.type.."_"..string.format("%02d",i)..".flac"
+        if not util.file_exists(record_path) then
+          break
+        end
+      end
+    end
+    if params:get(a.type.."sound")==2 then
+      local sample=params:get(a.type.."sample_file")
+      if is_dir(sample) then
+        print("not a valid file: "..sample)
+        do return end
+      end
+      rate=transpose_to_intonation(params:get(a.type.."sample_note"),a.note)
+      engine.fm1sample(
+        a.note,
+        sample,
+        0,
+        a.amp,
+        a.pan,
+        a.attack,
+        a.decay,
+        a.attack_curve,
+        a.decay_curve,
+        rate,
+        a.send,
+        a.eq_freq,
+        a.eq_db,
+        a.lpf,
+        a.type
+      )
+    else
+      engine.fm1(
+        a.note,
+        a.amp,
+        a.pan,
+        a.attack,
+        a.decay,
+        a.attack_curve,
+        a.decay_curve,
+        a.mod_ratio,
+        a.car_ratio,
+        a.index,
+        a.index_scale,
+        a.send,
+        a.eq_freq,
+        a.eq_db,
+        a.lpf,
+        a.noise,
+        a.noise_attack,
+        a.noise_decay,
+        a.type,
+        do_record and 1 or 0,
+        record_path
+      )
+    end
+  elseif engine_loaded=="MxSamples" then
     mx:on({
-      name=mx_instrument_list[params:get(a.type.."sample")],
+      name=mx_instrument_list[params:get(a.type.."instrument")],
       midi=a.note,
       velocity=80,
       amp=a.amp,
@@ -554,8 +712,10 @@ function generate_scale()
       -- root=root+12
     end
     global_scales[ins]=scale
+    if string.find(ins,"pad") then
+      global_scales[ins]=MusicUtil.generate_scale_of_length(params:get(ins.."root_note"),params:get(ins.."scale_mode"),24)
+    end
   end
-  global_scales["pad"]=MusicUtil.generate_scale_of_length(params:get("padroot_note"),params:get("padscale_mode"),24)
   -- for i=1,4 do
   --   for _,note in ipairs(MusicUtil.generate_scale_of_length(root,5,8)) do
   --     table.insert(note_list,note)
@@ -633,7 +793,7 @@ function redraw()
     screen.move(128,60)
     if networks[global_page].name~=nil then
       if engine_loaded=="MxSamples" then
-        screen.text_right(mx_instrument_list[params:get(instrument_list[global_page].."sample")])
+        screen.text_right(mx_instrument_list[params:get(instrument_list[global_page].."instrument")])
       else
         screen.text_right(networks[global_page].name)
       end
@@ -689,9 +849,17 @@ function odasho_load(filename)
 
   local data=json.decode(content)
   for i,_ in ipairs(networks) do
-    networks[i].nw=data[i].nw
-    networks[i].conn=data[i].conn
-    bank[i]=data[i].bank
+    if data[i]~=nil then
+      if data[i].nw~=nil then
+        networks[i].nw=data[i].nw
+      end
+      if data[i].conn~=nil then
+        networks[i].conn=data[i].conn
+      end
+      if data[i].bank~=nil then
+        bank[i]=data[i].bank
+      end
+    end
   end
 end
 
