@@ -847,9 +847,17 @@ function odasho_load(filename)
 
   local data=json.decode(content)
   for i,_ in ipairs(networks) do
+	  if data[i]~=nil then
+		  if data[i].nw~=nil then
     networks[i].nw=data[i].nw
+    end
+    if data[i].conn~=nil then
     networks[i].conn=data[i].conn
+    end
+    if data[i].bank~=nil then
     bank[i]=data[i].bank
+    end
+    end
   end
 end
 
