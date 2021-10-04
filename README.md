@@ -38,6 +38,10 @@ the grid is optional and opens up some controls. the first 8 columns mirror the 
 <img src="https://user-images.githubusercontent.com/6550035/135916882-38887714-d413-4f28-96ee-92a9e42253e4.png">
 </center>
 
+simultaneous multitrack recording is available if you select `PARAMS > record each`. this will record all playing instruments into the `~/dust/audio/o-o-o/<date>` folder as `.flac` files. be careful though as this can add up in disk space quickly! the idea here is that you can record multiple instruments and then mix them / add effects to them individually in post.
+
+if using the Odashodasho engine you can switch an instrument from the internal fm engine to a one-shot sample `PARAMS > <instrument> > sound`. then that sound will be triggered instead of the internal fm engine. 
+
 this script wouldn't exist without  Eli Fieldsteel's [FM tutorials](https://github.com/elifieldsteel/SuperCollider-Tutorials/blob/4460e024800b6525e4223c6cce02d9643d0cfbe3/full%20video%20scripts/22_script.scd), which the internal engine is based. it also wouldn't exist without [goldeneye](https://llllllll.co/t/goldeneye) where @tyleretters first implemented this genius idea of creating a grid of random euclidean rhythms.
 
 ## Install
