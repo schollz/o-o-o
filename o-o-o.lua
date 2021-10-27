@@ -321,6 +321,13 @@ function init()
   end
   params:add_option("playback","play during playback",{"off","on"},1)
   params:add_option("record","record each",{"off","on"},1)
+  params:add{type = "option", id = "scale_mode_all", name = "scale mode (all)",
+    options = scale_names, default = 5,
+    action = function() update_scales() end}
+  params:add{type = "number", id = "root_note_all", name = "root note (all)",
+    min = 0, max = 127, default = 60, formatter = function(param) return MusicUtil.note_num_to_name(param:get(), true) end,
+    action = function() update_scales() end}
+
   -- setup parameters
   parameter_list={}
   parameter_list["Odashodasho"]={"sample_file","sample_note","sound","attack_curve","decay_curve","mod_ratio","car_ratio","index","index_scale","noise","noise_attack","noise_decay","eq_freq","eq_db"}
@@ -488,6 +495,13 @@ function init()
   for _,ins in ipairs(instrument_list) do
     rebuild_menu(ins,1)
     params:set(ins.."play",1)
+  end
+end
+
+function update_scales()
+  for _,ins in ipairs(instrument_list) do
+    params:set(ins.."scale_mode",params:get("scale_mode_all"))
+    params:set(ins.."root_note",params:get("root_note_all"))
   end
 end
 
